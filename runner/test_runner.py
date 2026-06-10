@@ -131,15 +131,23 @@ class TestRunner:
                 duration_ms=0.0,
             )
 
-        instance: "BaseTest" = cls(self._card)
+        title = getattr(cls, 'title', getattr(cls, 'TITLE', tc_id))
+        domain = getattr(cls, 'domain', getattr(cls, 'DOMAIN', ''))
+        instance = cls(self._card)
         try:
-            result = instance.execute()
+            if hasattr(instance, 'execute') and callable(instance.execute):
+                result = instance.execute()
+            else:
+                result = instance.run()
+            # BaseTestCase.run() returns TestResult directly; normalise
+            if result is None and hasattr(instance, 'result'):
+                result = instance.result
         except Exception as exc:  # noqa: BLE001
             from runner.result import StepResult
             result = TestResult(
                 tc_id=tc_id,
-                title=cls.TITLE,
-                domain=cls.DOMAIN,
+                title=title,
+                domain=domain,
                 status=TestStatus.ERROR,
                 steps=[
                     StepResult(
