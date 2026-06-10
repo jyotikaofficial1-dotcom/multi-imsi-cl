@@ -103,6 +103,12 @@ class ReaderPanel(QWidget):
             self._adm_status.setText("Not verified")
             self._adm_status.setStyleSheet("color: #e65100;")
 
+            # Send TERMINAL PROFILE to activate STK session
+            try:
+                self._card.terminal_profile()
+            except Exception:
+                pass  # Non-STK cards silently ignore this
+
             # Auto-verify ADM if key already entered
             key = self._adm_input.text().strip().replace(" ", "")
             if len(key) in (16, 32):

@@ -59,7 +59,15 @@ class CardIO:
         return self.transmit(apdu)
 
     def send_envelope(self, env_data: bytes) -> APDUResponse:
-        apdu = APDU(0xA0, 0xC2, 0x00, 0x00, env_data)
+        """ENVELOPE — CLA=80 per ETSI TS 102 221 §11.1.40."""
+        apdu = APDU(0x80, 0xC2, 0x00, 0x00, env_data)
+        return self.transmit(apdu)
+
+    def terminal_profile(self) -> APDUResponse:
+        """Send TERMINAL PROFILE to activate STK session (must be sent once after ATR).
+        12-byte full-feature profile (FF×12) covers all STK events."""
+        profile = bytes([0xFF] * 12)
+        apdu = APDU(0x80, 0x10, 0x00, 0x00, profile)
         return self.transmit(apdu)
 
     def send_status(self) -> APDUResponse:
