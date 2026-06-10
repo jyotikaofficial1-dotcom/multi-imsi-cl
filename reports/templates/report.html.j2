@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Multi-IMSI Test Report — {{ timestamp }}</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 14px;
+      background: #f5f7fa;
+      color: #333;
+    }
+
+    header {
+      background: #1a237e;
+      color: #fff;
+      padding: 18px 32px;
+    }
+
+    header h1 {
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    header .meta {
+      font-size: 12px;
+      opacity: 0.8;
+      margin-top: 4px;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 24px 16px;
+    }
+
+    /* Summary cards */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 8px;
+      padding: 16px 20px;
+      text-align: center;
+      box-shadow: 0 1px 4px rgba(0,0,0,.08);
+    }
+
+    .card .value {
+      font-size: 32px;
+      font-weight: 700;
+      line-height: 1.1;
+    }
+
+    .card .label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: #888;
+      margin-top: 4px;
+    }
+
+    .card.pass  .value { color: #2e7d32; }
+    .card.fail  .value { color: #c62828; }
+    .card.skip  .value { color: #555; }
+    .card.total .value { color: #1a237e; }
+    .card.time  .value { color: #4527a0; font-size: 24px; }
+
+    /* Section heading */
+    h2 {
+      font-size: 16px;
+      font-weight: 600;
+      color: #1a237e;
+      margin-bottom: 10px;
+      padding-bottom: 4px;
+      border-bottom: 2px solid #e8eaf6;
+    }
+
+    /* Results table */
+    .results-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 1px 4px rgba(0,0,0,.08);
+      margin-bottom: 28px;
+    }
+
+    .results-table thead tr {
+      background: #3949ab;
+      color: #fff;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .results-table th,
+    .results-table td {
+      padding: 10px 14px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .results-table tbody tr:nth-child(even) { background: #f9f9f9; }
+    .results-table tbody tr:hover { background: #e8eaf6; }
+
+    /* Status badges */
+    .badge {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+    }
+
+    .badge-PASS  { background: #e8f5e9; color: #1b5e20; }
+    .badge-FAIL  { background: #ffebee; color: #b71c1c; }
+    .badge-SKIP  { background: #f5f5f5; color: #616161; }
+    .badge-ERROR { background: #fff3e0; color: #bf360c; }
+
+    /* Steps sub-table */
+    details { margin-top: 2px; }
+    summary {
+      cursor: pointer;
+      color: #3949ab;
+      font-size: 12px;
+      user-select: none;
+    }
+    summary:hover { text-decoration: underline; }
+
+    .steps-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 6px;
+      font-size: 12px;
+    }
+
+    .steps-table th {
+      background: #e8eaf6;
+      padding: 4px 8px;
+      text-align: left;
+      font-weight: 600;
+    }
+
+    .steps-table td {
+      padding: 4px 8px;
+      border-bottom: 1px solid #f0f0f0;
+      font-family: "Courier New", Courier, monospace;
+      word-break: break-all;
+    }
+
+    .steps-table tr:last-child td { border-bottom: none; }
+
+    /* ATR section */
+    .atr-box {
+      background: #fff;
+      border-radius: 8px;
+      padding: 12px 16px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.08);
+      margin-bottom: 28px;
+      font-family: "Courier New", Courier, monospace;
+      font-size: 13px;
+      color: #1a237e;
+      word-break: break-all;
+    }
+
+    footer {
+      text-align: center;
+      font-size: 11px;
+      color: #aaa;
+      padding: 20px 0 32px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Multi-IMSI Test Report</h1>
+  <div class="meta">Generated: {{ timestamp }}</div>
+</header>
+
+<div class="container">
+
+  {%- if atr %}
+  <h2>Card ATR</h2>
+  <div class="atr-box">{{ atr }}</div>
+  {%- endif %}
+
+  <h2>Summary</h2>
+  <div class="summary-grid">
+    <div class="card total">
+      <div class="value">{{ stats.total }}</div>
+      <div class="label">Total</div>
+    </div>
+    <div class="card pass">
+      <div class="value">{{ stats.pass }}</div>
+      <div class="label">Passed</div>
+    </div>
+    <div class="card fail">
+      <div class="value">{{ stats.fail }}</div>
+      <div class="label">Failed</div>
+    </div>
+    <div class="card skip">
+      <div class="value">{{ stats.skip }}</div>
+      <div class="label">Skipped / Error</div>
+    </div>
+    <div class="card time">
+      <div class="value">{{ stats.duration_s }} s</div>
+      <div class="label">Total Duration</div>
+    </div>
+  </div>
+
+  <h2>Test Results</h2>
+  <table class="results-table">
+    <thead>
+      <tr>
+        <th>TC ID</th>
+        <th>Domain</th>
+        <th>Title</th>
+        <th>Status</th>
+        <th>Duration (ms)</th>
+        <th>Steps</th>
+      </tr>
+    </thead>
+    <tbody>
+      {%- for r in results %}
+      <tr>
+        <td><strong>{{ r.tc_id }}</strong></td>
+        <td>{{ r.domain }}</td>
+        <td>{{ r.title }}</td>
+        <td><span class="badge badge-{{ r.status.value }}">{{ r.status.value }}</span></td>
+        <td>{{ "%.1f"|format(r.duration_ms) }}</td>
+        <td>
+          {%- if r.steps %}
+          <details>
+            <summary>{{ r.steps|length }} step(s)</summary>
+            <table class="steps-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Step</th>
+                  <th>APDU Sent</th>
+                  <th>Response</th>
+                  <th>Status</th>
+                  <th>Message</th>
+                </tr>
+              </thead>
+              <tbody>
+                {%- for s in r.steps %}
+                <tr>
+                  <td>{{ loop.index }}</td>
+                  <td>{{ s.step }}</td>
+                  <td>{{ s.apdu_sent }}</td>
+                  <td>{{ s.response }}</td>
+                  <td><span class="badge badge-{{ s.status.value }}">{{ s.status.value }}</span></td>
+                  <td>{{ s.message }}</td>
+                </tr>
+                {%- endfor %}
+              </tbody>
+            </table>
+          </details>
+          {%- else %}
+          —
+          {%- endif %}
+        </td>
+      </tr>
+      {%- endfor %}
+    </tbody>
+  </table>
+
+</div>
+
+<footer>
+  Multi-IMSI Test Tool &bull; {{ timestamp }}
+</footer>
+
+</body>
+</html>
