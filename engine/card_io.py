@@ -144,37 +144,37 @@ class CardIO:
 
     def build_location_status_envelope(self, mcc: str, mnc: str,
                                         service_type: int) -> bytes:
-        """
-        Build DOWNLOAD_LOCATION_STATUS BER-TLV envelope.
-        mcc: 3-digit string e.g. '404'
-        mnc: 2 or 3-digit string e.g. '20' or '020'
+        """Build DOWNLOAD_LOCATION_STATUS BER-TLV envelope.
+        mcc: 3-digit string e.g. '204'
+        mnc: 2 or 3-digit string e.g. '66' or '066'
         service_type: 0=Normal, 1=Limited, 2=No Service
         """
-        # Encode PLMN per GSM 24.008: nibble-swapped MCC+MNC
-        mcc_digits = mcc.zfill(3)
-        mnc_digits = mnc.zfill(3) if len(mnc) == 3 else mnc.zfill(2) + 'F'
+        mcc = mcc.zfill(3)
+        mnc3 = mnc.zfill(3) if len(mnc) == 3 else mnc.zfill(2) + 'F'
 
+        def nib(c: str) -> int:
+            return 0xF if c.upper() == 'F' else int(c)
+
+        # PLMN encoding per GSM 04.08:
+        # Byte 0: MCC[1] (high nibble) | MCC[0] (low nibble)
+        # Byte 1: MNC[2] (high nibble) | MCC[2] (low nibble)
+        # Byte 2: MNC[1] (high nibble) | MNC[0] (low nibble)
         plmn = bytes([
-            int(mcc_digits[1]) << 4 | int(mcc_digits[0]),
-            int(mnc_digits[0]) << 4 | int(mcc_digits[2]),
-            int(mnc_digits[2]) << 4 | int(mnc_digits[1]),
+            (nib(mcc[1]) << 4) | nib(mcc[0]),
+            (nib(mnc3[2]) << 4) | nib(mcc[2]),
+            (nib(mnc3[1]) << 4) | nib(mnc3[0]),
         ])
 
-        # Device identities TLV: 82 02 83 81 (network → UICC)
-        dev_id = bytes([0x82, 0x02, 0x83, 0x81])
-        # Location status TLV: 99 01 XX
+        dev_id     = bytes([0x82, 0x02, 0x83, 0x81])  # network → UICC
         loc_status = bytes([0x99, 0x01, service_type])
 
         if service_type in (0, 1):
-            # Location info TLV: 9B 06 [lac 2 bytes] [plmn 3 bytes] [cell 2 bytes]
-            loc_info = bytes([0x9B, 0x06, 0x00, 0x00]) + plmn[:3] + bytes([0x00, 0x00])
+            loc_info = bytes([0x9B, 0x06, 0x00, 0x00]) + plmn + bytes([0x00, 0x00])
             inner = dev_id + loc_status + loc_info
         else:
             inner = dev_id + loc_status
 
-        # Event download: D6 tag
-        envelope = bytes([0xD6, len(inner)]) + inner
-        return envelope
+        return bytes([0xD6, len(inner)]) + inner
 
     def send_location_status(self, mcc: str, mnc: str, service_type: int) -> APDUResponse:
         env = self.build_location_status_envelope(mcc, mnc, service_type)
