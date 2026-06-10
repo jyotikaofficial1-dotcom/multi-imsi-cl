@@ -1,12 +1,11 @@
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QComboBox,
-    QPushButton, QLineEdit, QGroupBox, QInputDialog, QMessageBox
+    QPushButton, QLineEdit, QGroupBox, QMessageBox
 )
 from PyQt6.QtCore import pyqtSignal
 from transport.reader_manager import ReaderManager
 from transport.connection import CardConnection
 from engine.card_io import CardIO
-from security.adm_keys import ADMKeyManager
 import os
 
 
@@ -19,13 +18,13 @@ class ReaderPanel(QWidget):
         self._rm = ReaderManager()
         self._conn: CardConnection | None = None
         self._card: CardIO | None = None
-        self._adm: ADMKeyManager | None = None
         self._build_ui()
 
     def _build_ui(self):
         group = QGroupBox("Reader Connection")
         layout = QVBoxLayout(group)
 
+        # Row 1: reader selector
         row1 = QHBoxLayout()
         self._combo = QComboBox()
         self._combo.setMinimumWidth(180)
@@ -36,8 +35,10 @@ class ReaderPanel(QWidget):
         row1.addWidget(self._combo, stretch=1)
         row1.addWidget(btn_refresh)
 
+        # Row 2: connect + ATR
         row2 = QHBoxLayout()
         self._btn_connect = QPushButton("Connect")
+        self._btn_connect.setFixedWidth(90)
         self._btn_connect.clicked.connect(self._toggle_connect)
         self._atr_label = QLineEdit()
         self._atr_label.setReadOnly(True)
@@ -46,8 +47,26 @@ class ReaderPanel(QWidget):
         row2.addWidget(self._btn_connect)
         row2.addWidget(self._atr_label, stretch=1)
 
+        # Row 3: ADM key input
+        row3 = QHBoxLayout()
+        row3.addWidget(QLabel("ADM Key (hex):"))
+        self._adm_input = QLineEdit()
+        self._adm_input.setPlaceholderText("e.g. 3733323339313637  (16 hex chars = 8 bytes)")
+        self._adm_input.setMaxLength(32)
+        self._adm_input.setStyleSheet("font-family: monospace;")
+        self._btn_adm = QPushButton("Verify ADM")
+        self._btn_adm.setFixedWidth(100)
+        self._btn_adm.setEnabled(False)
+        self._btn_adm.clicked.connect(self._verify_adm)
+        self._adm_status = QLabel("—")
+        self._adm_status.setFixedWidth(160)
+        row3.addWidget(self._adm_input, stretch=1)
+        row3.addWidget(self._btn_adm)
+        row3.addWidget(self._adm_status)
+
         layout.addLayout(row1)
         layout.addLayout(row2)
+        layout.addLayout(row3)
 
         outer = QVBoxLayout(self)
         outer.setContentsMargins(0, 0, 0, 0)
@@ -80,21 +99,14 @@ class ReaderPanel(QWidget):
             atr = self._rm.get_atr(raw_conn)
             self._atr_label.setText(atr)
             self._btn_connect.setText("Disconnect")
+            self._btn_adm.setEnabled(True)
+            self._adm_status.setText("Not verified")
+            self._adm_status.setStyleSheet("color: #e65100;")
 
-            # Load ADM vault
-            vault_path = "security/key_store.enc"
-            if os.path.exists(vault_path):
-                passphrase, ok = QInputDialog.getText(
-                    self, "ADM Vault", "Enter vault passphrase:",
-                    QInputDialog.InputMode.Password
-                )
-                if ok and passphrase:
-                    try:
-                        self._adm = ADMKeyManager(vault_path, passphrase.encode())
-                        self._adm.verify(self._card)
-                    except Exception as e:
-                        QMessageBox.warning(self, "ADM Error", str(e))
-                        self._adm = None
+            # Auto-verify ADM if key already entered
+            key = self._adm_input.text().strip().replace(" ", "")
+            if len(key) in (16, 32):
+                self._verify_adm()
 
             self.connected.emit(self._card)
         except Exception as e:
@@ -105,19 +117,45 @@ class ReaderPanel(QWidget):
             self._conn.disconnect()
         self._conn = None
         self._card = None
-        self._adm = None
         self._atr_label.clear()
         self._btn_connect.setText("Connect")
+        self._btn_adm.setEnabled(False)
+        self._adm_status.setText("—")
+        self._adm_status.setStyleSheet("")
         self.disconnected.emit()
+
+    def _verify_adm(self):
+        if self._card is None:
+            return
+        key = self._adm_input.text().strip().replace(" ", "")
+        if len(key) not in (16, 32):
+            QMessageBox.warning(self, "ADM Key Error",
+                                "ADM key must be 16 hex chars (8 bytes) or 32 hex chars (16 bytes).")
+            return
+        try:
+            resp = self._card.verify_adm(key)
+            if resp.sw == 0x9000:
+                self._adm_status.setText("✓ ADM verified")
+                self._adm_status.setStyleSheet("color: #2e7d32; font-weight: bold;")
+            elif resp.sw1 == 0x63:
+                retries = resp.sw2 & 0x0F
+                self._adm_status.setText(f"✗ Wrong key ({retries} left)")
+                self._adm_status.setStyleSheet("color: #c62828;")
+                QMessageBox.warning(self, "ADM Verify Failed",
+                                    f"Wrong ADM key. {retries} retries remaining.")
+            else:
+                self._adm_status.setText(f"✗ SW={resp.sw_hex}")
+                self._adm_status.setStyleSheet("color: #c62828;")
+                QMessageBox.warning(self, "ADM Verify Failed",
+                                    f"Card returned SW={resp.sw_hex}")
+        except Exception as e:
+            QMessageBox.critical(self, "ADM Error", str(e))
 
     def is_connected(self) -> bool:
         return self._conn is not None
 
     def card_io(self) -> CardIO | None:
         return self._card
-
-    def adm_manager(self) -> ADMKeyManager | None:
-        return self._adm
 
     def get_atr(self) -> str:
         return self._atr_label.text()

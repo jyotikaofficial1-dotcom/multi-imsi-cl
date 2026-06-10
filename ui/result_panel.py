@@ -27,7 +27,7 @@ class ResultPanel(QWidget):
         self._summary = QLabel("No results yet")
         self._table = QTableWidget(0, 5)
         self._table.setHorizontalHeaderLabels(
-            ["TC ID", "Domain", "Title", "Status", "Duration (ms)"]
+            ["TC ID", "Domain", "Title / Description", "Status", "Duration (ms)"]
         )
         hdr = self._table.horizontalHeader()
         hdr.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
@@ -47,10 +47,13 @@ class ResultPanel(QWidget):
         row = self._table.rowCount()
         self._table.insertRow(row)
 
+        description = getattr(result, 'description', '') or getattr(
+            type(result), 'description', '')
+        title_text = result.title
         items = [
             result.tc_id,
             result.domain,
-            result.title,
+            title_text,
             result.status.value,
             f"{result.duration_ms:.1f}",
         ]
@@ -58,6 +61,8 @@ class ResultPanel(QWidget):
         for col, text in enumerate(items):
             item = QTableWidgetItem(text)
             item.setBackground(bg)
+            if col == 2 and description:
+                item.setToolTip(description)
             if col == 3:
                 item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
             self._table.setItem(row, col, item)

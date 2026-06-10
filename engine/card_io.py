@@ -114,6 +114,12 @@ class CardIO:
         env = self.build_location_status_envelope(mcc, mnc, service_type)
         return self.send_envelope(env)
 
+    def verify_adm(self, adm_key_hex: str) -> APDUResponse:
+        """Verify ADM key: 00 20 00 0A 08 <8-byte key>."""
+        key = bytes.fromhex(adm_key_hex)
+        apdu = APDU(0x00, 0x20, 0x00, 0x0A, key)
+        return self.transmit(apdu)
+
     def send_menu_selection(self, item_id: int, help_request: bool = False) -> APDUResponse:
         """Send ENVELOPE MENU SELECTION for STK menu item."""
         # Device identities: 82 02 01 82 (keypad → card)
