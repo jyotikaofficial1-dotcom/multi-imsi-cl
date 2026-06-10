@@ -1,0 +1,16 @@
+reader:
+  index: 0
+  timeout_ms: 5000
+
+logging:
+  path: "logs/multiimsi_test.log"
+  level: "INFO"
+
+adm:
+  vault_path: "security/key_store.enc"
+  slot: "default"
+
+test:
+  df_multi_imsi: "7F305F1A"
+  ef_config: "4F01"
+  usim_aid: "A000000087100200"

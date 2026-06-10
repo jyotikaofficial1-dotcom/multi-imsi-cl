@@ -1,0 +1,137 @@
+ef_config:
+  fid: "4F01"
+  parent: "7F305F1A"
+  size_bytes: 50
+  description: "Application configuration and flags"
+
+ef_imsi_list:
+  fid: "4F07"
+  parent: "7F305F1A"
+  size_bytes: 90
+  record_size: 9
+  max_profiles: 10
+  offset_formula: "(index-1) * 9"
+
+ef_mcc_mapping:
+  fid: "4F03"
+  parent: "7F305F1A"
+  size_bytes: 500
+  record_size: 4
+  offset_formula: "(entry-1) * 4"
+
+ef_smsp_list:
+  fid: "4F42"
+  parent: "7F305F1A"
+  size_bytes: "ef_smsp_size * 10"
+
+ef_spn_list:
+  fid: "4F46"
+  parent: "7F305F1A"
+  size_bytes: 170
+  record_size: 17
+
+ef_acc_list:
+  fid: "4F78"
+  parent: "7F305F1A"
+  size_bytes: 20
+  record_size: 2
+
+ef_plmnwact_list:
+  fid: "4F60"
+  parent: "7F305F1A"
+  size_bytes: "ef_plmnwact_size * 10"
+
+ef_oplmnwact_list:
+  fid: "4F61"
+  parent: "7F305F1A"
+  size_bytes: "ef_oplmnwact_size * 10"
+
+ef_hplmnwact_list:
+  fid: "4F62"
+  parent: "7F305F1A"
+  size_bytes: "ef_hplmnwact_size * 10"
+
+ef_fplmn_list:
+  fid: "4F7B"
+  parent: "7F305F1A"
+  size_bytes: 120
+  record_size: 12
+
+ef_fplmn_adf_list:
+  fid: "007B"
+  parent: "7F305F1A"
+  size_bytes: "ef_fplmn_size * 10"
+
+ef_ad_usim_list:
+  fid: "6FAD"
+  parent: "7F305F1A"
+  size_bytes: 40
+  record_size: 4
+
+ef_impi_list:
+  fid: "4F32"
+  parent: "7F305F1A"
+  size_bytes: "ef_impi_size * 10"
+
+ef_domain_list:
+  fid: "4F33"
+  parent: "7F305F1A"
+  size_bytes: "ef_domain_size * 10"
+
+ef_impu_list:
+  fid: "4F34"
+  parent: "7F305F1A"
+  size_bytes: "ef_impu_size * 10"
+
+ef_5gs3gppnsc_list:
+  fid: "4F53"
+  parent: "7F305F1A"
+  size_bytes: "ef_5gs3gppnsc_size * 10"
+
+ef_uac_aic_list:
+  fid: "4F56"
+  parent: "7F305F1A"
+  size_bytes: 40
+  record_size: 4
+
+ef_suci_calc_info_list:
+  fid: "4F57"
+  parent: "7F305F1A"
+  size_bytes: "ef_suci_calc_info_size * 10"
+
+ef_routing_indicator_list:
+  fid: "4F5A"
+  parent: "7F305F1A"
+  size_bytes: 40
+  record_size: 4
+
+ef_ad_isim_list:
+  fid: "4FAD"
+  parent: "7F305F1A"
+  size_bytes: 48
+  record_size: 3 (actually 4 per some refs, using 3 here)
+
+ef_5gsn3gppnsc_list:
+  fid: "4F54"
+  parent: "7F305F1A"
+  size_bytes: "ef_5gsn3gppnsc_size * 10"
+
+ef_5gauthkeys_list:
+  fid: "4F55"
+  parent: "7F305F1A"
+  size_bytes: "ef_5gauthkeys_size * 10"
+
+ef_opl5g_list:
+  fid: "4F58"
+  parent: "7F305F1A"
+  size_bytes: "ef_opl5g_size * 10"
+
+ef_supi_nai_list:
+  fid: "4F59"
+  parent: "7F305F1A"
+  size_bytes: "ef_supi_nai_size * 10"
+
+ef_tn3gppsnn_list:
+  fid: "4F5C"
+  parent: "7F305F1A"
+  size_bytes: "ef_tn3gppsnn_size * 10"
