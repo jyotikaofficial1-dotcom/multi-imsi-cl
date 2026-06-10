@@ -37,7 +37,7 @@ class TestTree(QWidget):
         # Group by domain
         domains: dict[str, list] = {}
         for tc_id in sorted(self._registry.all_ids()):
-            cls = self._registry._classes.get(tc_id)
+            cls = self._registry.get_class(tc_id) if tc_id in self._registry.all_ids() else None
             if cls:
                 domain = getattr(cls, 'domain', 'Other')
                 domains.setdefault(domain, []).append((tc_id, cls))

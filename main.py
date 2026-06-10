@@ -71,16 +71,18 @@ def _run_cli():
 
     registry = TestRegistry()
     if args.all or args.ids is None:
-        test_classes = list(registry._classes.values())
+        test_classes = registry.get_selected(None)
     else:
         test_classes = registry.get_selected(args.ids)
 
     print(f"\nRunning {len(test_classes)} test case(s)...\n")
     results = []
-    for TestClass in sorted(test_classes, key=lambda c: c.TC_ID):
+    for TestClass in sorted(test_classes, key=lambda c: getattr(c, 'tc_id', getattr(c, 'TC_ID', ''))):
         tc = TestClass(card)
-        print(f"  {tc.TC_ID}: {tc.TITLE} ... ", end="", flush=True)
-        result = tc.execute()
+        tc_id_val = getattr(tc, 'tc_id', getattr(tc, 'TC_ID', '?'))
+        title_val = getattr(tc, 'title', getattr(tc, 'TITLE', '?'))
+        print(f"  {tc_id_val}: {title_val} ... ", end="", flush=True)
+        result = tc.execute() if hasattr(tc, 'execute') else tc.run()
         results.append(result)
         print(result.status.value)
 
