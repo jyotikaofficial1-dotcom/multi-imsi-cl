@@ -70,11 +70,15 @@ class TestTree(QWidget):
     def _select_all(self):
         root = self._tree.invisibleRootItem()
         for i in range(root.childCount()):
-            item = root.child(i)
-            item.setCheckState(0, Qt.CheckState.Checked)
+            domain_item = root.child(i)
+            for j in range(domain_item.childCount()):
+                domain_item.child(j).setCheckState(0, Qt.CheckState.Checked)
+            domain_item.setCheckState(0, Qt.CheckState.Checked)
 
     def _clear_all(self):
         root = self._tree.invisibleRootItem()
         for i in range(root.childCount()):
-            item = root.child(i)
-            item.setCheckState(0, Qt.CheckState.Unchecked)
+            domain_item = root.child(i)
+            for j in range(domain_item.childCount()):
+                domain_item.child(j).setCheckState(0, Qt.CheckState.Unchecked)
+            domain_item.setCheckState(0, Qt.CheckState.Unchecked)
