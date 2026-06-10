@@ -18,6 +18,7 @@ from ui.test_tree import TestTree
 from ui.apdu_console import APDUConsole
 from ui.result_panel import ResultPanel
 from ui.apdu_sender import APDUSender
+from ui.card_info_panel import CardInfoPanel
 from runner.test_runner import TestRunner
 from runner.result import TestResult
 from reports.html_report import HTMLReporter
@@ -114,9 +115,11 @@ class MainWindow(QMainWindow):
         self._apdu_sender.log_message.connect(
             lambda text, color: self._apdu_console.append_message(text, color)
         )
+        self._card_info = CardInfoPanel()
         right_tabs.addTab(self._result_panel, "Results")
+        right_tabs.addTab(self._card_info,    "Card Info")
         right_tabs.addTab(self._apdu_console, "APDU Log")
-        right_tabs.addTab(self._apdu_sender, "Manual APDU")
+        right_tabs.addTab(self._apdu_sender,  "Manual APDU")
         main_splitter.addWidget(right_tabs)
 
         main_splitter.setStretchFactor(0, 1)
@@ -252,6 +255,7 @@ class MainWindow(QMainWindow):
         )
         self._runner.discover()
         self._apdu_sender.set_card(card_io)
+        self._card_info.set_card(card_io)
         self._status_label.setText(
             f"Connected — ATR: {self._reader_panel.get_atr()}"
         )
@@ -266,6 +270,7 @@ class MainWindow(QMainWindow):
     def _on_disconnected(self):
         self._runner = None
         self._apdu_sender.set_card(None)
+        self._card_info.set_card(None)
         self._status_label.setText("Not connected")
         self._btn_run.setEnabled(False)
         self._act_run.setEnabled(False)
