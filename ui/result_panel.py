@@ -38,6 +38,9 @@ class ResultPanel(QWidget):
         self._table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         self._table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self._table.verticalHeader().setVisible(False)
+        self._table.setStyleSheet(
+            "QTableWidget::item:selected { background-color: #b3d4f5; color: #000000; }"
+        )
 
         layout.addWidget(self._summary)
         layout.addWidget(self._table)

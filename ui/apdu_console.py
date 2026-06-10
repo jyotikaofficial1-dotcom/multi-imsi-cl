@@ -13,13 +13,9 @@ class APDUConsole(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
 
         btn_row = QHBoxLayout()
-        self._label = QPushButton("APDU Log")
-        self._label.setEnabled(False)
-        self._label.setFlat(True)
-        btn_clear = QPushButton("Clear")
-        btn_clear.setFixedWidth(60)
+        btn_clear = QPushButton("Clear Log")
+        btn_clear.setFixedWidth(80)
         btn_clear.clicked.connect(self.clear)
-        btn_row.addWidget(self._label)
         btn_row.addStretch()
         btn_row.addWidget(btn_clear)
 
@@ -29,6 +25,11 @@ class APDUConsole(QWidget):
         font.setStyleHint(QFont.StyleHint.Monospace)
         self._edit.setFont(font)
         self._edit.setMaximumBlockCount(5000)
+        # Force white background + black text so colored output is always visible
+        self._edit.setStyleSheet(
+            "QPlainTextEdit { background-color: #1e1e1e; color: #d4d4d4; "
+            "border: 1px solid #444; }"
+        )
 
         layout.addLayout(btn_row)
         layout.addWidget(self._edit)
@@ -44,17 +45,17 @@ class APDUConsole(QWidget):
 
         append_colored(f"[{tc_id}] ", "#888888")
         if sent_hex:
-            append_colored(f"TX: {sent_hex}\n", "#2e7d32")
+            append_colored(f"TX: {sent_hex}\n", "#4ec9b0")   # teal
         if response_hex:
-            is_fail = not (response_hex.strip().endswith("[9000]") or
-                           response_hex.strip().endswith("9000"))
-            color = "#c62828" if is_fail else "#1565c0"
+            is_ok = (response_hex.strip().endswith("[9000]") or
+                     response_hex.strip().endswith("9000"))
+            color = "#f44747" if not is_ok else "#6a9955"     # red / green
             append_colored(f"RX: {response_hex}\n", color)
 
         self._edit.setTextCursor(cursor)
         self._edit.ensureCursorVisible()
 
-    def append_message(self, text: str, color: str = "#333333"):
+    def append_message(self, text: str, color: str = "#d4d4d4"):
         cursor = self._edit.textCursor()
         cursor.movePosition(QTextCursor.MoveOperation.End)
         fmt = QTextCharFormat()
