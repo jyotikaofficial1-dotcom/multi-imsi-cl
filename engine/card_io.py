@@ -64,11 +64,58 @@ class CardIO:
         return self.transmit(apdu)
 
     def terminal_profile(self) -> APDUResponse:
-        """Send TERMINAL PROFILE to activate STK session (must be sent once after ATR).
-        12-byte full-feature profile (FF×12) covers all STK events."""
+        """Send TERMINAL PROFILE (80 10 00 00 0C FF×12)."""
         profile = bytes([0xFF] * 12)
         apdu = APDU(0x80, 0x10, 0x00, 0x00, profile)
         return self.transmit(apdu)
+
+    def _fetch(self, length: int) -> APDUResponse:
+        """FETCH proactive command: 80 12 00 00 [len]."""
+        apdu = APDU(0x80, 0x12, 0x00, 0x00, le=length)
+        return self.transmit(apdu)
+
+    def _terminal_response(self, cmd_type: int) -> APDUResponse:
+        """TERMINAL RESPONSE OK for a fetched proactive command.
+        Structure: cmd_details(01 03 01 [type] 00) + dev_ids(02 02 82 81) + result(03 01 00)
+        """
+        tr_data = bytes([
+            0x01, 0x03, 0x01, cmd_type, 0x00,  # Command details
+            0x02, 0x02, 0x82, 0x81,             # Device identities (keypad→UICC)
+            0x03, 0x01, 0x00,                    # Result: OK
+        ])
+        apdu = APDU(0x80, 0x14, 0x00, 0x00, tr_data)
+        return self.transmit(apdu)
+
+    def run_proactive_session(self, max_iter: int = 100) -> list[str]:
+        """Send TERMINAL PROFILE then drain any pending proactive commands.
+
+        Loop (up to max_iter):
+          - If SW1=0x91: FETCH(SW2) → TERMINAL RESPONSE → repeat
+          - Otherwise: done
+
+        Returns a list of human-readable log lines describing what happened.
+        """
+        log: list[str] = []
+
+        resp = self.terminal_profile()
+        log.append(f"TERMINAL PROFILE → SW={resp.sw_hex}")
+
+        for _ in range(max_iter):
+            if resp.sw1 != 0x91:
+                break
+            fetch_len = resp.sw2
+            fetch_resp = self._fetch(fetch_len)
+            log.append(f"  FETCH({fetch_len}) → {fetch_resp.data.hex().upper() or '(empty)'} SW={fetch_resp.sw_hex}")
+
+            # Extract command type from fetch data byte index 5 (0-based)
+            # Proactive cmd structure: D0 [len] 81 03 [num] [type] [qual] ...
+            cmd_type = fetch_resp.data[5] if len(fetch_resp.data) > 5 else 0x00
+            tr_resp = self._terminal_response(cmd_type)
+            log.append(f"  TERMINAL RESPONSE(type={cmd_type:02X}) → SW={tr_resp.sw_hex}")
+            resp = tr_resp
+
+        log.append("Proactive session complete.")
+        return log
 
     def send_status(self) -> APDUResponse:
         apdu = APDU(0x00, 0xF2, 0x00, 0x00, le=0)

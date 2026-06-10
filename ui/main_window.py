@@ -79,6 +79,8 @@ class MainWindow(QMainWindow):
         self._build_toolbar()
         self._build_statusbar()
         self._set_running(False)
+        # Wire reader panel log signal after all widgets are constructed
+        self._reader_panel.log_message.connect(self._apdu_console.append_message)
 
     # ------------------------------------------------------------------
     # UI construction

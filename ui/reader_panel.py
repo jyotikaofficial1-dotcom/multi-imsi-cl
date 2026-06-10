@@ -10,8 +10,9 @@ import os
 
 
 class ReaderPanel(QWidget):
-    connected = pyqtSignal(object)     # CardIO
+    connected = pyqtSignal(object)       # CardIO
     disconnected = pyqtSignal()
+    log_message = pyqtSignal(str, str)   # (text, color) → APDU console
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -47,7 +48,7 @@ class ReaderPanel(QWidget):
         row2.addWidget(self._btn_connect)
         row2.addWidget(self._atr_label, stretch=1)
 
-        # Row 3: ADM key input
+        # Row 3: ADM key + proactive session button
         row3 = QHBoxLayout()
         row3.addWidget(QLabel("ADM Key (hex):"))
         self._adm_input = QLineEdit()
@@ -58,10 +59,19 @@ class ReaderPanel(QWidget):
         self._btn_adm.setFixedWidth(100)
         self._btn_adm.setEnabled(False)
         self._btn_adm.clicked.connect(self._verify_adm)
+        self._btn_tp = QPushButton("▶ Proactive Init")
+        self._btn_tp.setFixedWidth(120)
+        self._btn_tp.setEnabled(False)
+        self._btn_tp.setToolTip(
+            "Send TERMINAL PROFILE then drain pending STK commands\n"
+            "(FETCH + TERMINAL RESPONSE loop until SW ≠ 91 XX)"
+        )
+        self._btn_tp.clicked.connect(self._run_proactive)
         self._adm_status = QLabel("—")
         self._adm_status.setFixedWidth(160)
         row3.addWidget(self._adm_input, stretch=1)
         row3.addWidget(self._btn_adm)
+        row3.addWidget(self._btn_tp)
         row3.addWidget(self._adm_status)
 
         layout.addLayout(row1)
@@ -100,14 +110,12 @@ class ReaderPanel(QWidget):
             self._atr_label.setText(atr)
             self._btn_connect.setText("Disconnect")
             self._btn_adm.setEnabled(True)
+            self._btn_tp.setEnabled(True)
             self._adm_status.setText("Not verified")
             self._adm_status.setStyleSheet("color: #e65100;")
 
-            # Send TERMINAL PROFILE to activate STK session
-            try:
-                self._card.terminal_profile()
-            except Exception:
-                pass  # Non-STK cards silently ignore this
+            # Run full proactive session (TP + FETCH loop)
+            self._run_proactive(auto=True)
 
             # Auto-verify ADM if key already entered
             key = self._adm_input.text().strip().replace(" ", "")
@@ -126,9 +134,27 @@ class ReaderPanel(QWidget):
         self._atr_label.clear()
         self._btn_connect.setText("Connect")
         self._btn_adm.setEnabled(False)
+        self._btn_tp.setEnabled(False)
         self._adm_status.setText("—")
         self._adm_status.setStyleSheet("")
         self.disconnected.emit()
+
+    def _run_proactive(self, auto: bool = False):
+        """Send TERMINAL PROFILE and drain STK queue (FETCH/TR loop)."""
+        if self._card is None:
+            return
+        try:
+            log_lines = self._card.run_proactive_session()
+            color = "#888888" if auto else "#4a90d9"
+            for line in log_lines:
+                self.log_message.emit(line, color)
+            # Show brief status on button
+            self._btn_tp.setText("✓ Proactive Init")
+            self._btn_tp.setStyleSheet("color: #2e7d32;")
+        except Exception as e:
+            self.log_message.emit(f"Proactive session error: {e}", "#f44747")
+            if not auto:
+                QMessageBox.warning(self, "Proactive Session Error", str(e))
 
     def _verify_adm(self):
         if self._card is None:
@@ -143,6 +169,16 @@ class ReaderPanel(QWidget):
             if resp.sw == 0x9000:
                 self._adm_status.setText("✓ ADM verified")
                 self._adm_status.setStyleSheet("color: #2e7d32; font-weight: bold;")
+            elif resp.sw1 == 0x91:
+                # Another proactive command pending — drain then retry
+                self._run_proactive(auto=True)
+                resp = self._card.verify_adm(key)
+                if resp.sw == 0x9000:
+                    self._adm_status.setText("✓ ADM verified")
+                    self._adm_status.setStyleSheet("color: #2e7d32; font-weight: bold;")
+                else:
+                    self._adm_status.setText(f"✗ SW={resp.sw_hex}")
+                    self._adm_status.setStyleSheet("color: #c62828;")
             elif resp.sw1 == 0x63:
                 retries = resp.sw2 & 0x0F
                 self._adm_status.setText(f"✗ Wrong key ({retries} left)")
