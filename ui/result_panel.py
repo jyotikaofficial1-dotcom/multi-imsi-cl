@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QTableWidget, QTableWidgetItem,
-    QHeaderView, QLabel
+    QHeaderView, QLabel, QFrame
 )
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor
@@ -23,11 +23,13 @@ class ResultPanel(QWidget):
     def _build_ui(self):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(4)
 
         self._summary = QLabel("No results yet")
+
         self._table = QTableWidget(0, 5)
         self._table.setHorizontalHeaderLabels(
-            ["TC ID", "Domain", "Title / Description", "Status", "Duration (ms)"]
+            ["TC ID", "Domain", "Title", "Status", "Duration (ms)"]
         )
         hdr = self._table.horizontalHeader()
         hdr.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
@@ -43,22 +45,51 @@ class ResultPanel(QWidget):
             "QTableWidget::item { color: #000000; }"
             "QTableWidget::item:selected { background-color: #b3d4f5; color: #000000; }"
         )
+        self._table.itemSelectionChanged.connect(self._on_selection_changed)
+
+        # Description bar — shown when a row is selected
+        sep = QFrame()
+        sep.setFrameShape(QFrame.Shape.HLine)
+        sep.setFrameShadow(QFrame.Shadow.Sunken)
+
+        self._desc_label = QLabel("← Click a result row to see its description")
+        self._desc_label.setWordWrap(True)
+        self._desc_label.setStyleSheet(
+            "QLabel { background: #f5f5f5; border: 1px solid #ccc; "
+            "padding: 6px; color: #333; font-size: 11px; min-height: 36px; }"
+        )
 
         layout.addWidget(self._summary)
-        layout.addWidget(self._table)
+        layout.addWidget(self._table, stretch=1)
+        layout.addWidget(sep)
+        layout.addWidget(self._desc_label)
+
+    def _on_selection_changed(self):
+        rows = self._table.selectionModel().selectedRows()
+        if not rows:
+            self._desc_label.setText("← Click a result row to see its description")
+            return
+        row = rows[0].row()
+        if row < len(self._results):
+            result = self._results[row]
+            desc = getattr(result, 'description', '')
+            tc_id = result.tc_id
+            title = result.title
+            if desc:
+                self._desc_label.setText(f"<b>{tc_id} — {title}</b><br>{desc}")
+            else:
+                self._desc_label.setText(f"<b>{tc_id} — {title}</b>")
 
     def add_result(self, result):
         self._results.append(result)
         row = self._table.rowCount()
         self._table.insertRow(row)
 
-        description = getattr(result, 'description', '') or getattr(
-            type(result), 'description', '')
-        title_text = result.title
+        description = getattr(result, 'description', '')
         items = [
             result.tc_id,
             result.domain,
-            title_text,
+            result.title,
             result.status.value,
             f"{result.duration_ms:.1f}",
         ]
@@ -90,3 +121,4 @@ class ResultPanel(QWidget):
         self._results.clear()
         self._table.setRowCount(0)
         self._summary.setText("No results yet")
+        self._desc_label.setText("← Click a result row to see its description")

@@ -213,10 +213,12 @@ class BaseTestCase(ABC):
     title: str = ""
     domain: str = ""
     priority: str = "P2"
+    description: str = ""
 
     def __init__(self, card: "CardIO"):
         self.card = card
-        self.result = TestResult(self.tc_id, self.title, self.domain)
+        self.result = TestResult(self.tc_id, self.title, self.domain,
+                                 description=self.description)
         self._steps: list[StepResult] = []
 
     def assert_sw(self, resp: "APDUResponse", expected_sw: int = 0x9000,

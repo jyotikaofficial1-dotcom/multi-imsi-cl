@@ -48,10 +48,13 @@ class TestTree(QWidget):
             parent.setCheckState(0, Qt.CheckState.Checked)
             for tc_id, cls in tests:
                 title = getattr(cls, 'title', tc_id)
+                desc = getattr(cls, 'description', '')
                 child = QTreeWidgetItem(parent, [f"{tc_id} — {title}"])
                 child.setFlags(child.flags() | Qt.ItemFlag.ItemIsUserCheckable)
                 child.setCheckState(0, Qt.CheckState.Checked)
                 child.setData(0, Qt.ItemDataRole.UserRole, tc_id)
+                if desc:
+                    child.setToolTip(0, desc)
             parent.setExpanded(True)
 
     def selected_ids(self) -> list[str]:

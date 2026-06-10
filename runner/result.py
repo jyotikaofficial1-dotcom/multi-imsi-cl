@@ -35,12 +35,14 @@ class TestResult:
     status: "TestStatus" = field(default_factory=lambda: TestStatus.SKIP)
     steps: list[StepResult] = field(default_factory=list)
     duration_ms: float = 0.0
+    description: str = ""
 
     def serialise_to_dict(self) -> dict:
         return {
             "tc_id": self.tc_id,
             "title": self.title,
             "domain": self.domain,
+            "description": self.description,
             "status": self.status.value,
             "duration_ms": self.duration_ms,
             "steps": [s.serialise_to_dict() for s in self.steps],
