@@ -10,6 +10,7 @@ class TC_5G_01(BaseTestCase):
     title = "EF_5GS3GPPNSC_List (4F53) — NAS security context ASN.1"
     domain = "5G Files"
     priority = "P2"
+    description = "Reads EF_5GS3GPPNSC_List (4F53) and verifies the first slot starts with ASN.1 SEQUENCE tag A0, then walks the inner TLV structure and confirms mandatory tags 80 (ngKSI), 81 (keys), 82 (UL count), and 83 (DL count) are all present."
 
     def run(self) -> TestResult:
         t0 = time.perf_counter()
@@ -69,6 +70,7 @@ class TC_5G_02(BaseTestCase):
     title = "EF_UAC_AIC_List (4F56) — 4 bytes per profile"
     domain = "5G Files"
     priority = "P2"
+    description = "Reads 40 bytes from EF_UAC_AIC_List (4F56), asserts the file is exactly 40 bytes (10 profiles × 4 bytes), and verifies UAC_AIC_1 (bytes 0-3) is not all FF, indicating an active 5G profile is personalised."
 
     def run(self) -> TestResult:
         t0 = time.perf_counter()
@@ -110,6 +112,7 @@ class TC_5G_03(BaseTestCase):
     title = "EF_SUCI_Calc_Info_List (4F57) — ECIES public key 32 bytes"
     domain = "5G Files"
     priority = "P2"
+    description = "Reads EF_SUCI_Calc_Info_List (4F57) and verifies the first slot starts with TLV tag A0 (protection scheme container); locates the A1 (public key) sub-tag and asserts the inner 0x81 key-bytes field is exactly 32 bytes."
 
     def run(self) -> TestResult:
         t0 = time.perf_counter()
@@ -173,6 +176,7 @@ class TC_5G_04(BaseTestCase):
     title = "5G files updated after IMSI switch"
     domain = "5G Files"
     priority = "P1"
+    description = "Reads UAC_AIC_2 (4 bytes) from EF_UAC_AIC_List (4F56) at offset 4, triggers a switch to index 2, then reads EF_UAC_AIC (4F56) in ADF USIM and asserts all 4 bytes match UAC_AIC_2."
 
     def run(self) -> TestResult:
         t0 = time.perf_counter()
@@ -207,6 +211,7 @@ class TC_5G_05(BaseTestCase):
     title = "EF_Routing_Indicator_List (4F5A) — BCD format check"
     domain = "5G Files"
     priority = "P2"
+    description = "Reads 40 bytes from EF_Routing_Indicator_List (4F5A), verifies the file is exactly 40 bytes, and checks every nibble of the 4-byte RI_1 slot is a valid BCD digit (0-9) or padding nibble F."
 
     def run(self) -> TestResult:
         t0 = time.perf_counter()

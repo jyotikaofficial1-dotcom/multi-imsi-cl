@@ -10,6 +10,7 @@ class TC_STK_01(BaseTestCase):
     title = "STK 'Next IMSI' menu item"
     domain = "STK Menu"
     priority = "P1"
+    description = "Sends ENVELOPE MENU SELECTION with item=01 (Next IMSI) and reads EF_Config (4F01) byte 2 before and after, asserting the active IMSI index incremented (wrapping from 10 to 1 is valid)."
 
     def run(self) -> TestResult:
         t0 = time.perf_counter()
@@ -53,6 +54,7 @@ class TC_STK_02(BaseTestCase):
     title = "STK 'Priority IMSI' menu item"
     domain = "STK Menu"
     priority = "P1"
+    description = "Sends ENVELOPE MENU SELECTION with item=02 (Priority IMSI) and reads EF_Config (4F01) byte 2 to assert the active IMSI index is now 01, confirming an immediate switch to the priority profile."
 
     def run(self) -> TestResult:
         t0 = time.perf_counter()
@@ -79,6 +81,7 @@ class TC_STK_03(BaseTestCase):
     title = "STK 'Lock IMSI' menu item"
     domain = "STK Menu"
     priority = "P2"
+    description = "Switches to index 2, sends ENVELOPE MENU SELECTION item=03 (Lock IMSI), then fires a LOCATION_STATUS event for a different PLMN and reads EF_Config (4F01) byte 2 to confirm the index remains locked at 02."
 
     def run(self) -> TestResult:
         t0 = time.perf_counter()
@@ -120,6 +123,7 @@ class TC_STK_04(BaseTestCase):
     title = "STK 'Automatic Mode' toggle"
     domain = "STK Menu"
     priority = "P2"
+    description = "Reads EF_Config (4F01) byte 1 (auto mode) before the toggle, sends ENVELOPE MENU SELECTION item=04, re-reads byte 1 and asserts it flipped between 00 and 01; restores the original state if needed."
 
     def run(self) -> TestResult:
         t0 = time.perf_counter()

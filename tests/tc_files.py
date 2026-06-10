@@ -10,6 +10,7 @@ class TC_FILE_01(BaseTestCase):
     title = "EF_IMSI_List (4F07) — size and BCD encoding"
     domain = "File Validation"
     priority = "P1"
+    description = "Reads all 90 bytes of EF_IMSI_List (4F07), verifies the file is exactly 90 bytes, checks IMSI_1 bytes 0-8 are not all FF (personalised), and asserts the length byte (offset 0) is 07 or 08."
 
     def run(self) -> TestResult:
         t0 = time.perf_counter()
@@ -68,6 +69,7 @@ class TC_FILE_02(BaseTestCase):
     title = "EF_MCC_Mapping_List (4F03) — PLMN encoding and wildcard"
     domain = "File Validation"
     priority = "P1"
+    description = "Reads all 500 bytes of EF_MCC_Mapping_List (4F03) in two chunks, validates 4-byte PLMN-to-index entries (index byte 01-0A), and checks that at least one entry uses 'D' nibble wildcard padding."
 
     def run(self) -> TestResult:
         t0 = time.perf_counter()
@@ -130,6 +132,7 @@ class TC_FILE_03(BaseTestCase):
     title = "EF_SPN_List (4F46) — 17-byte records"
     domain = "File Validation"
     priority = "P2"
+    description = "Reads 170 bytes from EF_SPN_List (4F46), verifies the total size is 170, checks SPN_1 bytes 0-16 are not all FF, and asserts the display-condition byte at offset 0 is 00 or 01."
 
     def run(self) -> TestResult:
         t0 = time.perf_counter()
@@ -180,6 +183,7 @@ class TC_FILE_04(BaseTestCase):
     title = "EF_ACC_List (4F78) — 2 bytes per profile"
     domain = "File Validation"
     priority = "P2"
+    description = "Reads 20 bytes from EF_ACC_List (4F78), verifies the file is exactly 20 bytes (10 profiles × 2 bytes each), and logs ACC_1 (bytes 0-1) confirming the slot is present."
 
     def run(self) -> TestResult:
         t0 = time.perf_counter()
@@ -218,6 +222,7 @@ class TC_FILE_05(BaseTestCase):
     title = "EF_AD_USIM_List (6FAD) — 4-byte AD records"
     domain = "File Validation"
     priority = "P2"
+    description = "Reads 40 bytes from EF_AD_USIM_List (6FAD), verifies the file is exactly 40 bytes (10 profiles × 4 bytes each), and asserts the MNC length field at offset 2 of AD_1 is 02 or 03."
 
     def run(self) -> TestResult:
         t0 = time.perf_counter()
@@ -262,6 +267,7 @@ class TC_FILE_06(BaseTestCase):
     title = "EF_PLMNwACT_List (4F60) — size = 10 × EF_PLMNwACT size"
     domain = "File Validation"
     priority = "P2"
+    description = "Determines the per-profile PLMNwACT size from ADF USIM EF_PLMNwACT (6F60), reads EF_PLMNwACT_List (4F60) and asserts it is 10× that size, then validates the first 5-byte PLMN+ACT entry structure."
 
     def run(self) -> TestResult:
         t0 = time.perf_counter()
@@ -319,6 +325,7 @@ class TC_FILE_07(BaseTestCase):
     title = "EF_FPLMN_List (4F7B) — 120 bytes, 10 profiles × 12 bytes"
     domain = "File Validation"
     priority = "P2"
+    description = "Reads 120 bytes from EF_FPLMN_List (4F7B), asserts the file is exactly 120 bytes (10 profiles × 12 bytes), and if the first 12-byte block is not all FF validates the four 3-byte FPLMN entries within it."
 
     def run(self) -> TestResult:
         t0 = time.perf_counter()

@@ -10,6 +10,7 @@ class TC_ISIM_01(BaseTestCase):
     title = "EF_IMPI_List (4F32) — IMS private identity TLV encoding"
     domain = "ISIM Files"
     priority = "P2"
+    description = "Reads EF_IMPI_List (4F32) and verifies IMPI_1 starts with TLV tag 0x80, that the NAI payload is not all FF, and that the NAI string contains an '@' character (valid NAI format)."
 
     def run(self) -> TestResult:
         t0 = time.perf_counter()
@@ -68,6 +69,7 @@ class TC_ISIM_02(BaseTestCase):
     title = "EF_DOMAIN_List (4F33) — home network domain FQDN"
     domain = "ISIM Files"
     priority = "P2"
+    description = "Reads EF_DOMAIN_List (4F33) and verifies DOMAIN_1 starts with TLV tag 0x80, then decodes the length-prefixed value as ASCII and checks it contains '.' and has no null or space characters (valid FQDN)."
 
     def run(self) -> TestResult:
         t0 = time.perf_counter()
@@ -120,6 +122,7 @@ class TC_ISIM_03(BaseTestCase):
     title = "ISIM files updated after IMSI switch"
     domain = "ISIM Files"
     priority = "P1"
+    description = "Reads IMPI_2 from EF_IMPI_List (4F32) using the slot size derived from IMPI_1's TLV length, triggers a switch to index 2, then selects ADF ISIM via the AID from EF_Config (4F01) and asserts EF_IMPI (6F02) equals IMPI_2."
 
     def run(self) -> TestResult:
         t0 = time.perf_counter()

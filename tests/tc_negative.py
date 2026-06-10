@@ -12,6 +12,7 @@ class TC_NEG_01(BaseTestCase):
     title = "Read EF_Config without ADM authentication → 6982"
     domain = "Negative Tests"
     priority = "P1"
+    description = "Selects EF_Config (4F01) without prior ADM authentication and issues a READ BINARY for 1 byte, asserting the card returns SW 6982 (Security status not satisfied) to enforce access control."
 
     def run(self) -> TestResult:
         t0 = time.perf_counter()
@@ -53,6 +54,7 @@ class TC_NEG_02(BaseTestCase):
     title = "Write EF_IMSI_List with wrong Lc → 6700"
     domain = "Negative Tests"
     priority = "P1"
+    description = "Selects EF_IMSI_List (4F07) and sends an UPDATE BINARY with only 8 data bytes instead of the required 9-byte IMSI slot length, asserting the card returns SW 6700 (Wrong length)."
 
     def run(self) -> TestResult:
         t0 = time.perf_counter()
@@ -91,6 +93,7 @@ class TC_NEG_03(BaseTestCase):
     title = "Write IMSI index out of range (0x0B) — card remains operational"
     domain = "Negative Tests"
     priority = "P2"
+    description = "Writes 0x0B to EF_Config (4F01) byte 2 (out-of-range active index), fires a LOCATION_STATUS event, and confirms the applet handles the invalid value gracefully by still returning 9000 to a SELECT MF; restores the original config."
 
     def run(self) -> TestResult:
         t0 = time.perf_counter()
@@ -141,6 +144,7 @@ class TC_NEG_04(BaseTestCase):
     title = "Read beyond EOF of EF_MCC_Mapping_List → 6B00"
     domain = "Negative Tests"
     priority = "P2"
+    description = "Selects EF_MCC_Mapping_List (4F03) and issues a READ BINARY starting at offset 0x01F8 (504) on a 500-byte file, asserting the card returns an error SW (6B00, 6700, or 6A86) for the out-of-bounds access."
 
     def run(self) -> TestResult:
         t0 = time.perf_counter()
@@ -180,6 +184,7 @@ class TC_NEG_05(BaseTestCase):
     title = "Cold reset during IMSI switch — consistency check"
     domain = "Negative Tests"
     priority = "P1"
+    description = "Triggers an IMSI switch, reads the active index from EF_Config (4F01) byte 2, then cross-checks EF_IMSI (6F07) in ADF USIM against the corresponding slot in EF_IMSI_List (4F07) to confirm file-system consistency after the switch."
 
     def run(self) -> TestResult:
         t0 = time.perf_counter()

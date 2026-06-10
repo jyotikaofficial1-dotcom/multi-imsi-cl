@@ -12,6 +12,7 @@ class TC_OTA_01(BaseTestCase):
     title = "Remote update of EF_IMSI_List triggers config reload + REFRESH"
     domain = "OTA"
     priority = "P1"
+    description = "Writes a new 9-byte IMSI value to EF_IMSI_List (4F07) slot 3 (offset 18) via UPDATE BINARY to simulate OTA provisioning, reads it back to confirm the write succeeded, then verifies the card remains responsive with a SELECT MF after the expected internal REFRESH."
 
     def run(self) -> TestResult:
         t0 = time.perf_counter()
@@ -55,6 +56,7 @@ class TC_OTA_02(BaseTestCase):
     title = "External file update of EF_Config triggers applet re-init"
     domain = "OTA"
     priority = "P2"
+    description = "Writes 0x3C (60 s) to the poll-interval byte of EF_Config (4F01) at offset 9+X, reads it back to confirm byte equals 0x3C, verifies the card is still responsive via SELECT MF, then restores the original poll interval value."
 
     def run(self) -> TestResult:
         t0 = time.perf_counter()

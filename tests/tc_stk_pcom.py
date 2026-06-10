@@ -127,6 +127,7 @@ class TC_STK_NEXT_IMSI(BaseTestCase):
     title = "STK Next IMSI — switch to next profile"
     domain = "STK Menu"
     priority = "P1"
+    description = "Reads EF_Config (4F01) byte 2 for the current index, drains initial STK commands, selects menu item 01 (Next IMSI), fetches the resulting REFRESH, then reads EF_IMSI/EF_ACC/EF_SPN/EF_SMSP and asserts each matches the expected values for index current+1."
 
     def run(self) -> TestResult:
         t0 = time.perf_counter()
@@ -215,6 +216,7 @@ class TC_STK_PRIORITY_IMSI(BaseTestCase):
     title = "STK Priority IMSI — switch to priority profile"
     domain = "STK Menu"
     priority = "P1"
+    description = "Opens the STK menu and selects item 02 (Priority IMSI), handles the subsequent FETCH/TERMINAL_RESPONSE/REFRESH sequence, then reads EF_IMSI/EF_ACC/EF_SPN/EF_SMSP and asserts all match the expected values for the PRIO_IMSI index."
 
     def run(self) -> TestResult:
         t0 = time.perf_counter()
@@ -299,6 +301,7 @@ class TC_STK_LOCK_IMSI(BaseTestCase):
     title = "STK Lock IMSI — LOCI event blocked after lock"
     domain = "STK Menu"
     priority = "P2"
+    description = "Selects menu item 03 (Lock IMSI) for the current index, sends a LOCATION_STATUS envelope for the configured PLMN, and asserts the response SW is 9000 (no switch) and EF_Config (4F01) byte 2 remains equal to the locked index."
 
     def run(self) -> TestResult:
         t0 = time.perf_counter()
@@ -372,6 +375,7 @@ class TC_STK_AUTO_MODE(BaseTestCase):
     title = "STK Automatic Mode — toggle and verify location switching"
     domain = "STK Menu"
     priority = "P2"
+    description = "Reads EF_Config (4F01) byte 1 (auto mode) and byte 2 (active index), selects menu item 04 to toggle auto mode, re-reads byte 1 to confirm it flipped, then sends a LOCATION_STATUS envelope and verifies EF_IMSI/EF_ACC/EF_SPN/EF_SMSP reflect either a switch or no-switch depending on the current index."
 
     def run(self) -> TestResult:
         t0 = time.perf_counter()
