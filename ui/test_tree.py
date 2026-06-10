@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QTreeWidget, QTreeWidgetItem,
-    QPushButton
+    QPushButton, QLabel, QFrame
 )
 from PyQt6.QtCore import Qt
 from runner.registry import TestRegistry
@@ -16,10 +16,7 @@ class TestTree(QWidget):
     def _build_ui(self):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-
-        self._tree = QTreeWidget()
-        self._tree.setHeaderLabel("Test Cases")
-        self._tree.setColumnCount(1)
+        layout.setSpacing(4)
 
         btn_row = QHBoxLayout()
         btn_all = QPushButton("Select All")
@@ -29,12 +26,53 @@ class TestTree(QWidget):
         btn_row.addWidget(btn_all)
         btn_row.addWidget(btn_none)
 
+        self._tree = QTreeWidget()
+        self._tree.setHeaderLabel("Test Cases")
+        self._tree.setColumnCount(1)
+        self._tree.currentItemChanged.connect(self._on_item_changed)
+
+        sep = QFrame()
+        sep.setFrameShape(QFrame.Shape.HLine)
+        sep.setFrameShadow(QFrame.Shadow.Sunken)
+
+        self._desc_box = QLabel("Select a test case to see its description.")
+        self._desc_box.setWordWrap(True)
+        self._desc_box.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self._desc_box.setStyleSheet(
+            "QLabel { background: #f5f5f5; border: 1px solid #ccc; "
+            "padding: 6px; color: #333; font-size: 11px; }"
+        )
+        self._desc_box.setFixedHeight(72)
+
         layout.addLayout(btn_row)
-        layout.addWidget(self._tree)
+        layout.addWidget(self._tree, stretch=1)
+        layout.addWidget(sep)
+        layout.addWidget(self._desc_box)
+
+    def _on_item_changed(self, current, _previous):
+        if current is None:
+            self._desc_box.setText("Select a test case to see its description.")
+            return
+        tc_id = current.data(0, Qt.ItemDataRole.UserRole)
+        if not tc_id:
+            # domain header clicked
+            self._desc_box.setText(f"<b>{current.text(0)}</b> — domain group")
+            return
+        cls = self._registry.get_class(tc_id) if tc_id in self._registry.all_ids() else None
+        if cls:
+            desc = getattr(cls, 'description', '')
+            title = getattr(cls, 'title', tc_id)
+            priority = getattr(cls, 'priority', '')
+            header = f"<b>{tc_id}</b> [{priority}] — {title}"
+            if desc:
+                self._desc_box.setText(f"{header}<br><small>{desc}</small>")
+            else:
+                self._desc_box.setText(header)
+        else:
+            self._desc_box.setText(current.text(0))
 
     def _populate(self):
         self._tree.clear()
-        # Group by domain
         domains: dict[str, list] = {}
         for tc_id in sorted(self._registry.all_ids()):
             cls = self._registry.get_class(tc_id) if tc_id in self._registry.all_ids() else None
