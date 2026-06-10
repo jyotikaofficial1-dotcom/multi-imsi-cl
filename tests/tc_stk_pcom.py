@@ -478,6 +478,7 @@ class TC_STK_DEFAULT_SWITCH(BaseTestCase):
     title = "Default IMSI switching — LOCI envelope triggers switch to priority"
     domain = "STK Menu"
     priority = "P1"
+    description = "Sends a LOCATION_STATUS envelope with PLMN=55F566 (wildcard/default match), fetches the expected REFRESH if SW=91XX, then reads EF_IMSI/EF_ACC/EF_SPN/EF_SMSP and asserts they match the PRIO_IMSI profile values."
 
     def run(self) -> TestResult:
         t0 = time.perf_counter()
