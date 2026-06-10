@@ -1,0 +1,72 @@
+name: Build Windows EXE
+
+on:
+  workflow_dispatch:   # run manually from GitHub Actions tab
+  push:
+    branches: [ "claude/dazzling-wozniak-3xv6ta", "main" ]
+    paths:
+      - "**.py"
+      - "data/**"
+      - "reports/templates/**"
+      - "requirements.txt"
+      - "build.spec"
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Create dummy key_store.enc for build
+        # A real vault is needed at build time only so PyInstaller can bundle it.
+        # Replace this with your real key before distributing the .exe.
+        run: |
+          python -c "
+          from security.adm_keys import create_vault
+          create_vault('security/key_store.enc',
+                       {'default': 'FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF'},
+                       passphrase=b'build')
+          "
+
+      - name: Create assets directory (icon placeholder)
+        run: |
+          mkdir -p assets
+          python -c "
+          # Create a minimal valid .ico file (16x16 blank icon)
+          import struct, os
+          ico = (
+              b'\x00\x00\x01\x00\x01\x00'  # ICONDIR header
+              b'\x10\x10\x00\x00\x01\x00\x20\x00'  # ICONDIRENTRY
+              b'\x28\x00\x00\x00\x16\x00\x00\x00'
+              b'\x00\x00\x00\x00\x00\x00'
+              b'\x00\x00\x00\x00\x00\x00'
+          )
+          # Simpler: just copy any file as placeholder, PyInstaller will warn but continue
+          open('assets/icon.ico', 'wb').write(b'')
+          "
+
+      - name: Build EXE with PyInstaller
+        run: pyinstaller build.spec --clean --noconfirm
+
+      - name: Upload EXE artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: MultiIMSI_Tester_Windows
+          path: dist/MultiIMSI_Tester.exe
+          retention-days: 30
+
+      - name: Show EXE size
+        run: |
+          $size = (Get-Item dist\MultiIMSI_Tester.exe).length / 1MB
+          Write-Host "EXE size: $([math]::Round($size,1)) MB"
+        shell: pwsh

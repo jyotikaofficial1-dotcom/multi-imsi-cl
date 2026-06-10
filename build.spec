@@ -4,6 +4,8 @@ from pathlib import Path
 
 block_cipher = None
 
+_icon = 'assets/icon.ico' if Path('assets/icon.ico').exists() else None
+
 a = Analysis(
     ['main.py'],
     pathex=[],
@@ -60,5 +62,5 @@ exe = EXE(
     strip=False,
     upx=True,
     console=False,
-    icon='assets/icon.ico',
+    icon=_icon,
 )
