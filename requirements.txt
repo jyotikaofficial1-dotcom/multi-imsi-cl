@@ -1,8 +1,8 @@
-# pyscard installs from wheel on Windows; on Linux requires: apt install swig libpcsclite-dev
-pyscard==2.0.7
-PyQt6==6.7.0
-PyYAML==6.0.1
-cryptography==42.0.5
-Jinja2==3.1.4
-# PyInstaller 6.6.0 not on all pip mirrors; 6.15+ works on Python 3.11-3.13
+# pyscard: relax pin so pip picks a wheel for your Python version
+# (2.0.7 has no Python 3.14 wheel and requires swig to compile)
+pyscard>=2.0.7
+PyQt6>=6.7.0
+PyYAML>=6.0.1
+cryptography>=42.0.5
+Jinja2>=3.1.4
 pyinstaller>=6.6.0
