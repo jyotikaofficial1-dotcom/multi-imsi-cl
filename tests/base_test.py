@@ -195,3 +195,75 @@ class BaseTest(ABC):
 
 class _SkipException(Exception):
     """Internal exception used to short-circuit skipped tests."""
+
+
+# ---------------------------------------------------------------------------
+# Concrete base used by all generated test cases
+# ---------------------------------------------------------------------------
+
+class BaseTestCase(ABC):
+    """
+    Concrete base expected by every test module in tests/tc_*.py.
+
+    Uses lower-case class attributes (tc_id, title, domain, priority)
+    and the run() / _finalise() / assert_* pattern from the architecture spec.
+    """
+
+    tc_id: str = ""
+    title: str = ""
+    domain: str = ""
+    priority: str = "P2"
+
+    def __init__(self, card: "CardIO"):
+        self.card = card
+        self.result = TestResult(self.tc_id, self.title, self.domain)
+        self._steps: list[StepResult] = []
+
+    def assert_sw(self, resp: "APDUResponse", expected_sw: int = 0x9000,
+                  step_name: str = "") -> None:
+        status = TestStatus.PASS if resp.sw == expected_sw else TestStatus.FAIL
+        msg = "" if status == TestStatus.PASS else \
+              f"Expected {expected_sw:04X}, got {resp.sw_hex}"
+        self._steps.append(StepResult(step_name, "", str(resp), status, msg))
+        if status == TestStatus.FAIL:
+            raise AssertionError(msg)
+
+    def assert_byte(self, data: bytes, offset: int, expected: int,
+                    step_name: str = "") -> None:
+        actual = data[offset]
+        status = TestStatus.PASS if actual == expected else TestStatus.FAIL
+        msg = "" if status == TestStatus.PASS else \
+              f"Offset {offset}: expected {expected:02X}, got {actual:02X}"
+        self._steps.append(StepResult(step_name, "", data.hex().upper(), status, msg))
+        if status == TestStatus.FAIL:
+            raise AssertionError(msg)
+
+    def assert_bytes_equal(self, actual: bytes, expected: bytes,
+                           step_name: str = "") -> None:
+        status = TestStatus.PASS if actual == expected else TestStatus.FAIL
+        msg = "" if status == TestStatus.PASS else \
+              f"Expected {expected.hex().upper()}, got {actual.hex().upper()}"
+        self._steps.append(StepResult(step_name, "", actual.hex().upper(), status, msg))
+        if status == TestStatus.FAIL:
+            raise AssertionError(msg)
+
+    @abstractmethod
+    def run(self) -> "TestResult":
+        ...
+
+    def _finalise(self, exc: Exception | None = None) -> "TestResult":
+        if exc:
+            self.result.status = TestStatus.FAIL
+        else:
+            all_pass = all(s.status == TestStatus.PASS for s in self._steps)
+            self.result.status = TestStatus.PASS if all_pass else TestStatus.FAIL
+        self.result.steps = self._steps
+        return self.result
+
+    # --- convenience wrappers so test cases can call card helpers directly ---
+
+    def send_location_status(self, mcc: str, mnc: str, svc: int):
+        return self.card.send_location_status(mcc, mnc, svc)
+
+    def send_menu_selection(self, item_id: int, help_req: bool = False):
+        return self.card.send_menu_selection(item_id, help_req)

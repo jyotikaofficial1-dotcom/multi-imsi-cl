@@ -1,0 +1,16 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+build/
+dist/
+*.spec.bak
+*.egg-info/
+.env
+.venv/
+venv/
+logs/
+*.log
+security/key_store.enc
+assets/
