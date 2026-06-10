@@ -6,6 +6,7 @@ from PyQt6.QtCore import pyqtSignal
 from transport.reader_manager import ReaderManager
 from transport.connection import CardConnection
 from engine.card_io import CardIO
+import tests.card_config as card_config
 import os
 
 
@@ -117,6 +118,9 @@ class ReaderPanel(QWidget):
             # Run full proactive session (TP + FETCH loop)
             self._run_proactive(auto=True)
 
+            # Discover AIDs from EF DIR and cache in card_config
+            self._discover_aids()
+
             # Auto-verify ADM if key already entered
             key = self._adm_input.text().strip().replace(" ", "")
             if len(key) in (16, 32):
@@ -138,6 +142,24 @@ class ReaderPanel(QWidget):
         self._adm_status.setText("—")
         self._adm_status.setStyleSheet("")
         self.disconnected.emit()
+
+    def _discover_aids(self):
+        """Read EF DIR (2F00) to find USIM/ISIM AIDs and update card_config."""
+        if self._card is None:
+            return
+        try:
+            aids = self._card.read_ef_dir()
+            card_config.set_discovered_aids(aids)
+            usim = aids.get("USIM", "")
+            isim = aids.get("ISIM", "")
+            if usim:
+                self.log_message.emit(f"EF DIR → USIM AID: {usim}", "#888888")
+            if isim:
+                self.log_message.emit(f"EF DIR → ISIM AID: {isim}", "#888888")
+            if not usim and not isim:
+                self.log_message.emit("EF DIR → no USIM/ISIM AID found (using fallback)", "#e65100")
+        except Exception as e:
+            self.log_message.emit(f"EF DIR discovery error: {e}", "#f44747")
 
     def _run_proactive(self, auto: bool = False):
         """Send TERMINAL PROFILE and drain STK queue (FETCH/TR loop)."""

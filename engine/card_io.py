@@ -180,6 +180,63 @@ class CardIO:
         env = self.build_location_status_envelope(mcc, mnc, service_type)
         return self.send_envelope(env)
 
+    def read_ef_dir(self) -> dict[str, str]:
+        """Read EF DIR (2F00) under MF and return discovered AIDs.
+
+        Returns dict with keys like 'USIM', 'ISIM', 'OTHER' mapping to AID hex strings.
+        Parses Application Template (tag 61) TLVs; inner tag 4F = AID, 50 = label.
+        """
+        aids: dict[str, str] = {}
+        try:
+            self.select_mf()
+            fid = bytes.fromhex("2F00")
+            apdu = APDU(0x00, 0xA4, 0x00, 0x04, fid)  # select with response
+            resp = self.transmit(apdu)
+            # Read up to 256 bytes of EF DIR
+            data = self.read_binary_chunked(256)
+            i = 0
+            while i < len(data):
+                if data[i] != 0x61:
+                    i += 1
+                    continue
+                if i + 1 >= len(data):
+                    break
+                tlen = data[i + 1]
+                inner = data[i + 2: i + 2 + tlen]
+                i += 2 + tlen
+                # Parse inner TLVs
+                aid = b""
+                label = ""
+                j = 0
+                while j < len(inner):
+                    tag = inner[j]
+                    if j + 1 >= len(inner):
+                        break
+                    vlen = inner[j + 1]
+                    val = inner[j + 2: j + 2 + vlen]
+                    j += 2 + vlen
+                    if tag == 0x4F:
+                        aid = val
+                    elif tag == 0x50:
+                        try:
+                            label = val.decode("ascii", errors="replace")
+                        except Exception:
+                            label = val.hex()
+                if not aid:
+                    continue
+                aid_hex = aid.hex().upper()
+                # Classify by RID / label
+                upper_label = label.upper()
+                if "USIM" in upper_label or aid_hex.startswith("A0000000871002"):
+                    aids["USIM"] = aid_hex
+                elif "ISIM" in upper_label or aid_hex.startswith("A0000000871004"):
+                    aids["ISIM"] = aid_hex
+                else:
+                    aids.setdefault("OTHER", aid_hex)
+        except Exception:
+            pass
+        return aids
+
     def verify_adm(self, adm_key_hex: str) -> APDUResponse:
         """Verify ADM key: 00 20 00 0A 08 <8-byte key>."""
         key = bytes.fromhex(adm_key_hex)

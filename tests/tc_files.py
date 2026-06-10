@@ -2,7 +2,7 @@ import time
 from tests.base_test import BaseTestCase, TestResult, TestStatus, StepResult
 
 DF_MULTI = "7F305F1A"
-USIM_AID = "A0000000871002FF33FF018900000100"
+from tests.card_config import get_usim_aid as _get_usim_aid
 
 
 class TC_FILE_01(BaseTestCase):
@@ -273,7 +273,7 @@ class TC_FILE_06(BaseTestCase):
         t0 = time.perf_counter()
         try:
             # Read PLMNwACT from ADF USIM to determine per-profile size
-            self.card.select_by_aid(USIM_AID)
+            self.card.select_by_aid(_get_usim_aid())
             self.card.select_by_id("6F60")
             # Use SELECT with P2=04 to get FCP — simplified: read and infer size
             resp_usim = self.card.read_binary(0, 0x28)  # try 40 bytes

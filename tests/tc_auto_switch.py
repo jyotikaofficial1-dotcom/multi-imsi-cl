@@ -5,7 +5,7 @@ from tests.card_config import MCC_MNC_HEX, MCC_IMSI_INDEX, PRIO_IMSI, IMSI_BY_IN
 DF_MULTI = "7F305F1A"
 EF_CONFIG = "4F01"
 EF_IMSI_LIST = "4F07"
-USIM_AID = "A0000000871002FF33FF018900000100"
+from tests.card_config import get_usim_aid as _get_usim_aid
 
 # Decode MCC/MNC from card_config (e.g. "02F466" → MCC="204", MNC="66")
 def _decode_plmn_hex(plmn_hex: str):
@@ -53,7 +53,7 @@ class TC_AUTO_01(BaseTestCase):
                              f"Active IMSI index = {MCC_IMSI_INDEX:02X}")
 
             # Verify EF_IMSI in ADF USIM
-            self.card.select_by_aid(USIM_AID)
+            self.card.select_by_aid(_get_usim_aid())
             self.card.select_by_id("6F07")
             resp = self.card.read_binary(0, 9)
             self.assert_sw(resp, 0x9000, "Read EF_IMSI from ADF USIM")

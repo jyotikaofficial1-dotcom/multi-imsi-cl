@@ -4,7 +4,7 @@ from tests.base_test import BaseTestCase, TestResult, TestStatus, StepResult
 DF_MULTI = "7F305F1A"
 EF_CONFIG = "4F01"
 EF_IMSI_LIST = "4F07"
-USIM_AID = "A0000000871002FF33FF018900000100"
+from tests.card_config import get_usim_aid as _get_usim_aid
 
 
 class TC_NEG_01(BaseTestCase):
@@ -205,7 +205,7 @@ class TC_NEG_05(BaseTestCase):
             ))
 
             # Read EF_IMSI from ADF USIM
-            self.card.select_by_aid(USIM_AID)
+            self.card.select_by_aid(_get_usim_aid())
             self.card.select_by_id("6F07")
             resp = self.card.read_binary(0, 9)
             self.assert_sw(resp, 0x9000, "Read current EF_IMSI from ADF USIM")

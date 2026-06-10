@@ -2,7 +2,7 @@ import time
 from tests.base_test import BaseTestCase, TestResult, TestStatus, StepResult
 
 DF_MULTI = "7F305F1A"
-USIM_AID = "A0000000871002FF33FF018900000100"
+from tests.card_config import get_usim_aid as _get_usim_aid
 
 
 class TC_5G_01(BaseTestCase):
@@ -193,7 +193,7 @@ class TC_5G_04(BaseTestCase):
             self.assert_sw(resp, 0x9000, "Trigger switch to IMSI index 2")
 
             # Verify EF_UAC_AIC in ADF USIM updated
-            self.card.select_by_aid(USIM_AID)
+            self.card.select_by_aid(_get_usim_aid())
             self.card.select_by_id("4F56")
             resp = self.card.read_binary(0, 4)
             self.assert_sw(resp, 0x9000, "Read EF_UAC_AIC from ADF USIM after switch")

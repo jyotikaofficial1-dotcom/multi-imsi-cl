@@ -72,6 +72,35 @@ EF_CONFIG_DATA = bytes.fromhex(
     "040101010010A0000000871002FFFFFFFF8901030000"
 )
 
+# AIDs discovered from EF DIR (2F00) at connect time — populated by reader_panel
+# Falls back to the value found on the reference card if discovery fails.
+USIM_AID: str = "A0000000871002FF33FF018900000100"
+ISIM_AID: str = ""
+
+_USIM_RID = "A0000000871002"
+_ISIM_RID = "A0000000871004"
+_FALLBACK_USIM = "A0000000871002FF33FF018900000100"
+
+
+def set_discovered_aids(aids: dict) -> None:
+    """Called by reader_panel after reading EF DIR. Updates module-level AID vars."""
+    global USIM_AID, ISIM_AID
+    if aids.get("USIM"):
+        USIM_AID = aids["USIM"]
+    if aids.get("ISIM"):
+        ISIM_AID = aids["ISIM"]
+
+
+def get_usim_aid() -> str:
+    """Return the runtime-discovered USIM AID, or the fallback hardcoded value."""
+    return USIM_AID or _FALLBACK_USIM
+
+
+def get_isim_aid() -> str:
+    """Return the runtime-discovered ISIM AID (may be empty if card has none)."""
+    return ISIM_AID
+
+
 # Number of personalised IMSI profiles on this card
 MAX_PROFILES = 3
 

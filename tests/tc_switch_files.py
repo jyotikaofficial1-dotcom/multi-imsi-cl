@@ -10,7 +10,7 @@ EF_SMSP_LIST = "4F42"
 EF_PLMNWACT_LIST = "4F60"
 EF_OPLMNWACT_LIST = "4F61"
 EF_HPLMNWACT_LIST = "4F62"
-USIM_AID = "A0000000871002FF33FF018900000100"
+from tests.card_config import get_usim_aid as _get_usim_aid
 
 
 class TC_SWITCH_01(BaseTestCase):
@@ -40,7 +40,7 @@ class TC_SWITCH_01(BaseTestCase):
             self.assert_sw(resp, 0x9000, "Trigger switch to index 2 via location event")
 
             # Verify EF_IMSI in ADF USIM = IMSI_2
-            self.card.select_by_aid(USIM_AID)
+            self.card.select_by_aid(_get_usim_aid())
             self.card.select_by_id("6F07")
             resp = self.card.read_binary(0, 9)
             self.assert_sw(resp, 0x9000, "Read EF_IMSI from ADF USIM after switch")
@@ -75,7 +75,7 @@ class TC_SWITCH_02(BaseTestCase):
             self.assert_sw(resp, 0x9000, "Trigger switch to index 2")
 
             # Verify EF_SPN in ADF USIM
-            self.card.select_by_aid(USIM_AID)
+            self.card.select_by_aid(_get_usim_aid())
             self.card.select_by_id("6F46")
             resp = self.card.read_binary(0, 17)
             self.assert_sw(resp, 0x9000, "Read EF_SPN from ADF USIM after switch")
@@ -110,7 +110,7 @@ class TC_SWITCH_03(BaseTestCase):
             self.assert_sw(resp, 0x9000, "Trigger switch to index 2")
 
             # Verify EF_ACC in ADF USIM
-            self.card.select_by_aid(USIM_AID)
+            self.card.select_by_aid(_get_usim_aid())
             self.card.select_by_id("6F78")
             resp = self.card.read_binary(0, 2)
             self.assert_sw(resp, 0x9000, "Read EF_ACC from ADF USIM after switch")
@@ -144,7 +144,7 @@ class TC_SWITCH_04(BaseTestCase):
             resp = self.card.send_location_status("424", "02", 0)
             self.assert_sw(resp, 0x9000, "Trigger switch to index 2")
 
-            self.card.select_by_aid(USIM_AID)
+            self.card.select_by_aid(_get_usim_aid())
             self.card.select_by_id("6F42")
             resp = self.card.read_record(1, smsp_record_size)
             self.assert_sw(resp, 0x9000, "Read EF_SMSP record 1 from ADF USIM")
@@ -179,7 +179,7 @@ class TC_SWITCH_05(BaseTestCase):
             resp = self.card.send_location_status("424", "02", 0)
             self.assert_sw(resp, 0x9000, "Trigger switch to index 2")
 
-            self.card.select_by_aid(USIM_AID)
+            self.card.select_by_aid(_get_usim_aid())
             self.card.select_by_id("6F60")
             resp = self.card.read_binary(0, plmn_size)
             self.assert_sw(resp, 0x9000, "Read EF_PLMNwACT from ADF USIM")
@@ -203,7 +203,7 @@ class TC_SWITCH_06(BaseTestCase):
         t0 = time.perf_counter()
         try:
             # Write dummy FPLMN entry
-            self.card.select_by_aid(USIM_AID)
+            self.card.select_by_aid(_get_usim_aid())
             self.card.select_by_id("6F7B")
             resp = self.card.update_binary(0, bytes([0x24, 0xF2, 0x99]))
             self.assert_sw(resp, 0x9000, "Write dummy FPLMN entry 24F299")
@@ -213,7 +213,7 @@ class TC_SWITCH_06(BaseTestCase):
             self.assert_sw(resp, 0x9000, "Trigger IMSI switch")
 
             # Verify FPLMN cleared (12 bytes all FF)
-            self.card.select_by_aid(USIM_AID)
+            self.card.select_by_aid(_get_usim_aid())
             self.card.select_by_id("6F7B")
             resp = self.card.read_binary(0, 12)
             self.assert_sw(resp, 0x9000, "Read EF_FPLMN after switch")
@@ -241,7 +241,7 @@ class TC_SWITCH_07(BaseTestCase):
             self.assert_sw(resp, 0x9000, "Trigger IMSI switch")
 
             # Read EF_LOCI (6F7E) - should be reset
-            self.card.select_by_aid(USIM_AID)
+            self.card.select_by_aid(_get_usim_aid())
             self.card.select_by_id("6F7E")
             resp = self.card.read_binary(0, 11)
             self.assert_sw(resp, 0x9000, "Read EF_LOCI after switch")

@@ -4,7 +4,7 @@ from tests.base_test import BaseTestCase, TestResult, TestStatus, StepResult
 DF_MULTI = "7F305F1A"
 EF_CONFIG = "4F01"
 EF_IMSI_LIST = "4F07"
-USIM_AID = "A0000000871002FF33FF018900000100"
+from tests.card_config import get_usim_aid as _get_usim_aid
 
 
 class TC_OTA_01(BaseTestCase):
