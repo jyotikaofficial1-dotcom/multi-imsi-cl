@@ -7,10 +7,21 @@ class CardIO:
 
     def __init__(self, conn: CardConnection):
         self._conn = conn
+        self._apdu_log: list[tuple[str, str]] = []  # [(tx_hex, rx_hex), ...]
 
     def transmit(self, apdu: APDU) -> APDUResponse:
+        tx_hex = " ".join(f"{b:02X}" for b in apdu.to_list())
         data, sw1, sw2 = self._conn.transmit(apdu.to_list())
-        return APDUResponse(bytes(data), sw1, sw2)
+        resp = APDUResponse(bytes(data), sw1, sw2)
+        rx_hex = (resp.data.hex().upper() + " " if resp.data else "") + resp.sw_hex
+        self._apdu_log.append((tx_hex, rx_hex))
+        return resp
+
+    def get_apdu_log(self) -> list[tuple[str, str]]:
+        return list(self._apdu_log)
+
+    def clear_apdu_log(self) -> None:
+        self._apdu_log.clear()
 
     def select_by_path(self, path_hex: str) -> APDUResponse:
         path = bytes.fromhex(path_hex)

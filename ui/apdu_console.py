@@ -66,3 +66,6 @@ class APDUConsole(QWidget):
 
     def clear(self):
         self._edit.clear()
+
+    def get_text(self) -> str:
+        return self._edit.toPlainText()

@@ -39,6 +39,8 @@ class ResultPanel(QWidget):
         self._table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self._table.verticalHeader().setVisible(False)
         self._table.setStyleSheet(
+            "QTableWidget { color: #000000; font-size: 12px; }"
+            "QTableWidget::item { color: #000000; }"
             "QTableWidget::item:selected { background-color: #b3d4f5; color: #000000; }"
         )
 

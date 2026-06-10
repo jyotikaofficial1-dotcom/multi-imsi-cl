@@ -24,7 +24,7 @@ class TestTree(QWidget):
         btn_row = QHBoxLayout()
         btn_all = QPushButton("Select All")
         btn_all.clicked.connect(self._select_all)
-        btn_none = QPushButton("Clear")
+        btn_none = QPushButton("Unselect All")
         btn_none.clicked.connect(self._clear_all)
         btn_row.addWidget(btn_all)
         btn_row.addWidget(btn_none)

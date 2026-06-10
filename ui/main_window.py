@@ -142,6 +142,10 @@ class MainWindow(QMainWindow):
         self._btn_export_csv.setEnabled(False)
         self._btn_export_csv.clicked.connect(self._export_csv)
 
+        self._btn_export_log = QPushButton("Export Log…")
+        self._btn_export_log.setEnabled(False)
+        self._btn_export_log.clicked.connect(self._export_log)
+
         btn_bar.addWidget(self._btn_run)
         btn_bar.addWidget(self._btn_stop)
         btn_bar.addStretch()
@@ -149,6 +153,7 @@ class MainWindow(QMainWindow):
         btn_bar.addWidget(self._btn_export_html)
         btn_bar.addWidget(self._btn_export_json)
         btn_bar.addWidget(self._btn_export_csv)
+        btn_bar.addWidget(self._btn_export_log)
         root.addLayout(btn_bar)
 
     def _build_menu(self):
@@ -309,12 +314,19 @@ class MainWindow(QMainWindow):
     def _on_result(self, result: TestResult):
         self._result_panel.add_result(result)
 
-        # Log each step's APDU exchange to the console
-        for step in result.steps:
-            if step.apdu_sent or step.response:
-                self._apdu_console.append_apdu(
-                    result.tc_id, step.apdu_sent, step.response
-                )
+        # Log all APDUs captured at CardIO level
+        if self._runner and self._runner._card:
+            log = self._runner._card.get_apdu_log()
+            self._runner._card.clear_apdu_log()
+            for tx, rx in log:
+                self._apdu_console.append_apdu(result.tc_id, tx, rx)
+        # Fallback: log from step records if no CardIO log
+        else:
+            for step in result.steps:
+                if step.apdu_sent or step.response:
+                    self._apdu_console.append_apdu(
+                        result.tc_id, step.apdu_sent, step.response
+                    )
 
         # Update progress
         done = self._result_panel._table.rowCount()
@@ -333,6 +345,7 @@ class MainWindow(QMainWindow):
         self._btn_export_html.setEnabled(True)
         self._btn_export_json.setEnabled(True)
         self._btn_export_csv.setEnabled(True)
+        self._btn_export_log.setEnabled(True)
 
     def _on_run_finished(self):
         self._set_running(False)
@@ -369,6 +382,7 @@ class MainWindow(QMainWindow):
         self._btn_export_html.setEnabled(False)
         self._btn_export_json.setEnabled(False)
         self._btn_export_csv.setEnabled(False)
+        self._btn_export_log.setEnabled(False)
         self._status_label.setText(
             f"Connected — ATR: {self._reader_panel.get_atr()}"
             if self._reader_panel.is_connected()
@@ -424,6 +438,23 @@ class MainWindow(QMainWindow):
             try:
                 CSVExporter(results).save(path)
                 self._status_label.setText(f"CSV report saved: {os.path.basename(path)}")
+            except Exception as e:
+                QMessageBox.critical(self, "Export Error", str(e))
+
+    def _export_log(self):
+        text = self._apdu_console.get_text()
+        if not text.strip():
+            QMessageBox.information(self, "No Log", "APDU log is empty.")
+            return
+        path, _ = QFileDialog.getSaveFileName(
+            self, "Export APDU Log", self._default_filename("txt"),
+            "Text Files (*.txt)"
+        )
+        if path:
+            try:
+                with open(path, "w", encoding="utf-8") as f:
+                    f.write(text)
+                self._status_label.setText(f"Log saved: {os.path.basename(path)}")
             except Exception as e:
                 QMessageBox.critical(self, "Export Error", str(e))
 
