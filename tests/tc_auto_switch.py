@@ -12,6 +12,7 @@ class TC_AUTO_01(BaseTestCase):
     title = "Normal service — PLMN match → switch to priority IMSI"
     domain = "Auto Switch"
     priority = "P1"
+    description = "Sends a LOCATION_STATUS Normal Service envelope with MCC=404/MNC=20, then reads EF_Config (4F01) byte 2 to assert the active index is 01 and verifies EF_IMSI (6F07) in ADF USIM matches IMSI_1 from EF_IMSI_List (4F07)."
 
     def run(self) -> TestResult:
         t0 = time.perf_counter()
@@ -53,6 +54,7 @@ class TC_AUTO_02(BaseTestCase):
     title = "Normal service — PLMN already active, no switch"
     domain = "Auto Switch"
     priority = "P1"
+    description = "Records the current active index from EF_Config (4F01) byte 2, sends a second LOCATION_STATUS for the same PLMN (MCC=404/MNC=20), then re-reads byte 2 to confirm the index is unchanged."
 
     def run(self) -> TestResult:
         t0 = time.perf_counter()
@@ -86,6 +88,7 @@ class TC_AUTO_03(BaseTestCase):
     title = "Limited service — PLI LOCI issued, preferred IMSI selected"
     domain = "Auto Switch"
     priority = "P1"
+    description = "Sends a LOCATION_STATUS Limited Service envelope with MCC=424/MNC=02, then reads EF_Config (4F01) byte 2 to assert the active IMSI index is 02 (the UAE-preferred profile)."
 
     def run(self) -> TestResult:
         t0 = time.perf_counter()
@@ -113,6 +116,7 @@ class TC_AUTO_04(BaseTestCase):
     title = "PLMN not in MCC list — switch to default IMSI index"
     domain = "Auto Switch"
     priority = "P1"
+    description = "Sends a LOCATION_STATUS Normal Service envelope with unknown PLMN MCC=999/MNC=01, then reads EF_Config (4F01) byte 2 to assert the applet fell back to the wildcard/default index 01."
 
     def run(self) -> TestResult:
         t0 = time.perf_counter()
@@ -140,6 +144,7 @@ class TC_AUTO_05(BaseTestCase):
     title = "Automatic mode disabled — no IMSI switch on location event"
     domain = "Auto Switch"
     priority = "P2"
+    description = "Writes 00 to EF_Config (4F01) offset 1 to disable automatic mode, fires a LOCATION_STATUS event, and confirms EF_Config byte 2 (active index) is unchanged; restores auto mode to 01 afterwards."
 
     def run(self) -> TestResult:
         t0 = time.perf_counter()

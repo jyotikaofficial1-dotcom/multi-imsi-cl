@@ -18,6 +18,7 @@ class TC_SWITCH_01(BaseTestCase):
     title = "IMSI file correctly updated after switch"
     domain = "Switch Files"
     priority = "P1"
+    description = "Reads IMSI_2 from EF_IMSI_List (4F07) at offset 9, triggers a switch to index 2 via LOCATION_STATUS MCC=424/MNC=02, then reads EF_IMSI (6F07) in ADF USIM and asserts it equals IMSI_2."
 
     def run(self) -> TestResult:
         t0 = time.perf_counter()
@@ -57,6 +58,7 @@ class TC_SWITCH_02(BaseTestCase):
     title = "SPN updated after switch"
     domain = "Switch Files"
     priority = "P1"
+    description = "Reads SPN_2 from EF_SPN_List (4F46) at offset 17, triggers a switch to index 2, then reads EF_SPN (6F46) in ADF USIM and asserts the 17-byte value matches SPN_2."
 
     def run(self) -> TestResult:
         t0 = time.perf_counter()
@@ -91,6 +93,7 @@ class TC_SWITCH_03(BaseTestCase):
     title = "ACC updated after switch"
     domain = "Switch Files"
     priority = "P1"
+    description = "Reads ACC_2 (2 bytes) from EF_ACC_List (4F78) at offset 2, triggers a switch to index 2, then reads EF_ACC (6F78) in ADF USIM and verifies the 2-byte value matches ACC_2."
 
     def run(self) -> TestResult:
         t0 = time.perf_counter()
@@ -125,6 +128,7 @@ class TC_SWITCH_04(BaseTestCase):
     title = "SMSP updated after switch"
     domain = "Switch Files"
     priority = "P2"
+    description = "Reads SMSP_2 (28 bytes) from EF_SMSP_List (4F42) at offset 28, triggers a switch to index 2, then reads record 1 of EF_SMSP (6F42) in ADF USIM and asserts it matches SMSP_2."
 
     def run(self) -> TestResult:
         t0 = time.perf_counter()
@@ -158,6 +162,7 @@ class TC_SWITCH_05(BaseTestCase):
     title = "PLMNwACT / OPLMNwACT / HPLMNwACT updated"
     domain = "Switch Files"
     priority = "P2"
+    description = "Reads PLMNwACT_2 (40 bytes) from EF_PLMNwACT_List (4F60) at offset 40, triggers a switch to index 2, then reads EF_PLMNwACT (6F60) in ADF USIM and asserts the 5-byte PLMN+ACT entries match PLMNwACT_2."
 
     def run(self) -> TestResult:
         t0 = time.perf_counter()
@@ -192,6 +197,7 @@ class TC_SWITCH_06(BaseTestCase):
     title = "FPLMN cleared before REFRESH"
     domain = "Switch Files"
     priority = "P1"
+    description = "Writes a dummy FPLMN entry (24F299) to EF_FPLMN (6F7B) offset 0, triggers an IMSI switch, then reads 12 bytes of EF_FPLMN and asserts all bytes are 0xFF (list cleared)."
 
     def run(self) -> TestResult:
         t0 = time.perf_counter()
@@ -225,6 +231,7 @@ class TC_SWITCH_07(BaseTestCase):
     title = "Location files reset to default value before REFRESH"
     domain = "Switch Files"
     priority = "P1"
+    description = "Triggers an IMSI switch, then reads EF_LOCI (6F7E) 11 bytes and asserts the update-status byte (last byte) is 00 or 01 (default/not-updated), and reads EF_EPSLOCI (6FE3) 18 bytes to confirm it is accessible."
 
     def run(self) -> TestResult:
         t0 = time.perf_counter()
@@ -269,6 +276,7 @@ class TC_SWITCH_08(BaseTestCase):
     title = "REFRESH command issued at end of switch"
     domain = "Switch Files"
     priority = "P1"
+    description = "Reads the REFRESH type byte from EF_Config (4F01) at offset X+8, triggers an IMSI switch, and verifies the card remains responsive by issuing a SELECT MF (9000) after the REFRESH."
 
     def run(self) -> TestResult:
         t0 = time.perf_counter()

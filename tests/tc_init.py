@@ -11,6 +11,7 @@ class TC_INIT_01(BaseTestCase):
     title = "Verify applet enable flag activates menu"
     domain = "Applet Init"
     priority = "P1"
+    description = "Reads EF_Config (4F01) bytes 0-2 and verifies: byte 0 = 01 (applet enabled), byte 1 = 01 (auto mode on), byte 2 = active IMSI index in range 1-10."
 
     def run(self) -> TestResult:
         t0 = time.perf_counter()
@@ -50,6 +51,7 @@ class TC_INIT_02(BaseTestCase):
     title = "Applet disabled — menu must not appear"
     domain = "Applet Init"
     priority = "P1"
+    description = "Writes 00 to EF_Config (4F01) byte 0 to disable the applet, reads it back to confirm byte 0 = 00, then restores the original value."
 
     def run(self) -> TestResult:
         t0 = time.perf_counter()
@@ -89,6 +91,7 @@ class TC_INIT_03(BaseTestCase):
     title = "Verify poll interval registration"
     domain = "Applet Init"
     priority = "P2"
+    description = "Reads EF_Config (4F01) to determine menu text length X from byte 8, then checks the poll interval byte at offset 9+X and asserts it equals 0x1E (30 seconds)."
 
     def run(self) -> TestResult:
         t0 = time.perf_counter()
@@ -125,6 +128,7 @@ class TC_INIT_04(BaseTestCase):
     title = "Max IMSI profiles field = 0x0A"
     domain = "Applet Init"
     priority = "P2"
+    description = "Reads EF_Config (4F01) bytes 0-5 and asserts byte 5 (max profiles field) equals 0x0A, confirming the card supports up to 10 IMSI profiles."
 
     def run(self) -> TestResult:
         t0 = time.perf_counter()
@@ -146,6 +150,7 @@ class TC_INIT_05(BaseTestCase):
     title = "EF_Config — ISIM / USIM AID fields valid"
     domain = "Applet Init"
     priority = "P1"
+    description = "Reads EF_Config (4F01) and locates the ISIM AID length at offset X+21 (10-16 bytes), then validates the USIM AID follows immediately with length 10-16 bytes and a prefix starting A000000087."
 
     def run(self) -> TestResult:
         t0 = time.perf_counter()

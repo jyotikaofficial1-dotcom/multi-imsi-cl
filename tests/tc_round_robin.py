@@ -10,6 +10,7 @@ class TC_RR_01(BaseTestCase):
     title = "Round robin enabled — cycles to next index on network loss"
     domain = "Round Robin"
     priority = "P1"
+    description = "Confirms EF_Config (4F01) offset 6 = 01 (round robin enabled), sends two successive No Service LOCATION_STATUS envelopes, and asserts the active index in byte 2 changed between the two events."
 
     def run(self) -> TestResult:
         t0 = time.perf_counter()
@@ -65,6 +66,7 @@ class TC_RR_02(BaseTestCase):
     title = "Round robin disabled — no cycling on network loss"
     domain = "Round Robin"
     priority = "P1"
+    description = "Writes 00 to EF_Config (4F01) offset 6 to disable round robin, fires a No Service LOCATION_STATUS envelope, and confirms EF_Config byte 2 (active index) is unchanged; restores round robin to 01 afterwards."
 
     def run(self) -> TestResult:
         t0 = time.perf_counter()
@@ -103,6 +105,7 @@ class TC_RR_03(BaseTestCase):
     title = "Periodic switching via STATUS command counter"
     domain = "Round Robin"
     priority = "P2"
+    description = "Reads EF_Config (4F01) offsets 3-4 and asserts byte 3 = 01 (periodic switching enabled); then issues (counter-1) STATUS commands with no trigger expected, and a final STATUS to verify the PLI LOCI switch fires."
 
     def run(self) -> TestResult:
         t0 = time.perf_counter()
@@ -149,6 +152,7 @@ class TC_RR_04(BaseTestCase):
     title = "Fallback mode — return to priority IMSI after counter expires"
     domain = "Round Robin"
     priority = "P2"
+    description = "Reads the fallback mode byte (offset X+14) and counter (offset X+13) from EF_Config (4F01), switches to index 2, issues the fallback counter number of STATUS commands, and asserts EF_Config byte 2 reverts to index 01 (priority)."
 
     def run(self) -> TestResult:
         t0 = time.perf_counter()
