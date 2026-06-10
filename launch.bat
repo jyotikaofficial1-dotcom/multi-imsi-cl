@@ -17,3 +17,8 @@ if errorlevel 1 (
 )
 
 %PY% main.py
+if errorlevel 1 (
+    echo.
+    echo *** Tool exited with an error. See traceback above. ***
+    pause
+)
