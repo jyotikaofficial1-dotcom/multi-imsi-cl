@@ -17,6 +17,7 @@ from ui.reader_panel import ReaderPanel
 from ui.test_tree import TestTree
 from ui.apdu_console import APDUConsole
 from ui.result_panel import ResultPanel
+from ui.apdu_sender import APDUSender
 from runner.test_runner import TestRunner
 from runner.result import TestResult
 from reports.html_report import HTMLReporter
@@ -103,12 +104,17 @@ class MainWindow(QMainWindow):
         self._test_tree = TestTree()
         main_splitter.addWidget(self._test_tree)
 
-        # Right: tabbed result + APDU console
+        # Right: tabbed result + APDU console + manual sender
         right_tabs = QTabWidget()
         self._result_panel = ResultPanel()
         self._apdu_console = APDUConsole()
+        self._apdu_sender = APDUSender()
+        self._apdu_sender.log_message.connect(
+            lambda text, color: self._apdu_console.append_message(text, color)
+        )
         right_tabs.addTab(self._result_panel, "Results")
         right_tabs.addTab(self._apdu_console, "APDU Log")
+        right_tabs.addTab(self._apdu_sender, "Manual APDU")
         main_splitter.addWidget(right_tabs)
 
         main_splitter.setStretchFactor(0, 1)
@@ -243,6 +249,7 @@ class MainWindow(QMainWindow):
             progress_cb=None,   # results come via Qt signals from worker
         )
         self._runner.discover()
+        self._apdu_sender.set_card(card_io)
         self._status_label.setText(
             f"Connected — ATR: {self._reader_panel.get_atr()}"
         )
@@ -256,6 +263,7 @@ class MainWindow(QMainWindow):
 
     def _on_disconnected(self):
         self._runner = None
+        self._apdu_sender.set_card(None)
         self._status_label.setText("Not connected")
         self._btn_run.setEnabled(False)
         self._act_run.setEnabled(False)
@@ -277,9 +285,9 @@ class MainWindow(QMainWindow):
             return
 
         self._result_panel.clear_results()
-        self._apdu_console.clear()
+        # Do NOT clear the APDU log here — user clears it manually
         self._apdu_console.append_message(
-            f"Starting run: {len(tc_ids)} test(s) selected…", "#1565c0"
+            f"── Starting run: {len(tc_ids)} test(s) ──", "#4a90d9"
         )
 
         self._set_running(True)
