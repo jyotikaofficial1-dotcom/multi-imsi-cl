@@ -129,17 +129,25 @@ class CardIO:
         return resp.data, resp
 
     def read_binary_chunked(self, total_length: int, chunk_size: int = 0xEF) -> bytes:
-        """Read large files in chunks (handles >255 byte files)."""
+        """Read large files in chunks (handles >255 byte files).
+
+        Accepts SW=9000 and SW=6282 (End-of-File warning — data still returned).
+        Stops on any other SW or when the card returns fewer bytes than requested.
+        """
         result = bytearray()
         offset = 0
         while offset < total_length:
             remaining = total_length - offset
             length = min(chunk_size, remaining)
             resp = self.read_binary(offset, length)
-            if not resp.ok:
+            if resp.ok or resp.sw == 0x6282:
+                if resp.data:
+                    result.extend(resp.data)
+                if resp.sw == 0x6282 or len(resp.data) < length:
+                    break   # reached end of file
+                offset += len(resp.data)
+            else:
                 break
-            result.extend(resp.data)
-            offset += len(resp.data)
         return bytes(result)
 
     def build_location_status_envelope(self, mcc: str, mnc: str,

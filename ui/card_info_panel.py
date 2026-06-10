@@ -192,22 +192,30 @@ class _Reader(QObject):
         results: dict[str, bytes | None] = {}
         try:
             c = self._card
-            for fid in [EF_CONFIG, EF_MCC_LIST, EF_IMSI_LIST]:
+            # Core files — read up to known max sizes
+            core = {EF_CONFIG: 64, EF_MCC_LIST: 500, EF_IMSI_LIST: 90}
+            for fid, size in core.items():
                 try:
                     c.select_by_path(DF_MULTI)
-                    c.select_by_id(fid)
-                    size = {"4F01": 64, "4F03": 500, "4F07": 90}[fid]
+                    resp_sel = c.select_by_id(fid)
+                    if not (resp_sel.ok or resp_sel.sw1 == 0x61):
+                        results[fid] = None
+                        continue
                     data = c.read_binary_chunked(size)
-                    results[fid] = data
-                except Exception as e:
+                    results[fid] = data if data else None
+                except Exception:
                     results[fid] = None
 
+            # Other proprietary files
             for fid, *_ in OTHER_FILES:
                 try:
                     c.select_by_path(DF_MULTI)
-                    c.select_by_id(fid)
+                    resp_sel = c.select_by_id(fid)
+                    if not (resp_sel.ok or resp_sel.sw1 == 0x61):
+                        results[fid] = None
+                        continue
                     data = c.read_binary_chunked(256)
-                    results[fid] = data
+                    results[fid] = data if data else None
                 except Exception:
                     results[fid] = None
 
@@ -377,23 +385,34 @@ class CardInfoPanel(QWidget):
     def refresh(self) -> None:
         if self._card is None:
             return
-        if self._thread and self._thread.isRunning():
-            return
+        if self._thread is not None:
+            return  # already running
 
         self._set_status("Reading card files…", "#1565c0")
         self._btn_refresh.setEnabled(False)
         self._progress.setVisible(True)
 
-        self._thread = QThread(self)
-        self._reader = _Reader(self._card)
-        self._reader.moveToThread(self._thread)
-        self._thread.started.connect(self._reader.run)
-        self._reader.done.connect(self._on_data)
-        self._reader.error.connect(self._on_error)
-        self._reader.done.connect(self._thread.quit)
-        self._reader.done.connect(self._reader.deleteLater)
-        self._thread.finished.connect(self._thread.deleteLater)
-        self._thread.start()
+        thread = QThread()           # no parent — lifetime managed manually
+        reader = _Reader(self._card)
+        reader.moveToThread(thread)
+
+        thread.started.connect(reader.run)
+        reader.done.connect(self._on_data)
+        reader.error.connect(self._on_error)
+        # stop the thread when work is done; clean up in _on_done_cleanup
+        reader.done.connect(thread.quit)
+        reader.error.connect(thread.quit)
+        thread.finished.connect(self._on_thread_finished)
+
+        # keep strong Python references so GC doesn't free them mid-run
+        self._thread = thread
+        self._reader = reader
+        thread.start()
+
+    def _on_thread_finished(self):
+        """Called when the worker thread finishes — release references safely."""
+        self._thread = None
+        self._reader = None
 
     def _on_data(self, results: dict):
         self._progress.setVisible(False)
@@ -411,7 +430,7 @@ class CardInfoPanel(QWidget):
     def _on_error(self, msg: str):
         self._progress.setVisible(False)
         self._btn_refresh.setEnabled(True)
-        self._set_status(f"Error: {msg}", "#c62828")
+        self._set_status(f"Read error: {msg}", "#c62828")
 
     # ── populate helpers ─────────────────────────────────────────────────────
 
